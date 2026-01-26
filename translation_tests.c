@@ -94,6 +94,7 @@ bool fence_test_1(){
 
     goto_priv(PRIV_HS);
     hspt_init();
+    sfence_vma();
 
 
     TEST_SETUP_EXCEPT();
@@ -128,6 +129,7 @@ bool fence_test_1(){
 
     goto_priv(PRIV_HS);
     hspt_init();
+    sfence_vma();
 
     *(uint32_t*)vaddr = 0x00008067;  // ret指令
     sfence_vma();
@@ -356,8 +358,9 @@ bool fence_test_3(){
     sfence_vma();
     TEST_SETUP_EXCEPT();
     TEST_EXEC_EXCEPT(vaddr);
-    TEST_ASSERT("hs instr fetch without page fault when executing sfence(pte.r from 1 to 0)",
-        excpt.triggered == false
+    TEST_ASSERT("hs instr fetch with page fault when executing sfence(pte.r from 1 to 0)",
+        excpt.triggered == true &&
+        excpt.cause == CAUSE_IPF
     );
 
 
@@ -367,7 +370,7 @@ bool fence_test_3(){
 
     goto_priv(PRIV_HS);
     hspt_init();
-
+    sfence_vma();
 
     TEST_SETUP_EXCEPT();
     sd(vaddr, 0xdeadbeef);
@@ -401,7 +404,7 @@ bool fence_test_3(){
 
     goto_priv(PRIV_HS);
     hspt_init();
-
+    sfence_vma();
 
     TEST_SETUP_EXCEPT();
     ld(vaddr);
@@ -434,7 +437,7 @@ bool fence_test_3(){
 
     goto_priv(PRIV_HS);
     hspt_init();
-
+    sfence_vma();
 
     TEST_SETUP_EXCEPT();
     ld(vaddr);

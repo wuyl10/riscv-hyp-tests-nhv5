@@ -287,5 +287,6 @@ void hspt_512GB_superpage_misalign_setup();
 void hspt_512GB_superpage_align_boundary_setup();
 void set_superpage_512G();
 void hspt_add_reserved_bits();
+void pbmt_hspt_to_x_base_paddr(int, uintptr_t);
 
 #endif // DYNAMIC_PAGE_TABLES_H

@@ -498,6 +498,11 @@ void pbmt_hspt_to_x(int pbmt_page){
     hspt[2][pbmt_page] = (addr >> 2) | PTE_AD | test_page_perm_table[pbmt_page].vs;
 }
 
+void pbmt_hspt_to_x_base_paddr(int pbmt_page , uintptr_t new_base_paddr){
+    uintptr_t addr = new_base_paddr + 250 * PAGE_SIZE;
+    hspt[2][pbmt_page] = (addr >> 2) | PTE_AD | test_page_perm_table[pbmt_page].vs;
+}
+
 void hspt_ptw_ppn_high_bit_overflow_setup(){
     //设置hspt，使得页表项的ppn高位溢出(36位以上非0)
     // 设置PPN的第36位为1（在PTE中为bit 46）
@@ -760,6 +765,10 @@ void pbmt_hspt_to_x(int pbmt_page){
     hspt[4][pbmt_page] = (addr >> 2) | PTE_AD | test_page_perm_table[pbmt_page].vs;
 }
 
+void pbmt_hspt_to_x_base_paddr(int pbmt_page , uintptr_t new_base_paddr){
+    uintptr_t addr = new_base_paddr + 250 * PAGE_SIZE;
+    hspt[4][pbmt_page] = (addr >> 2) | PTE_AD | test_page_perm_table[pbmt_page].vs;
+}
 
 void hspt_u_mode_allow(){
     //方便后续u模式访存不报异常(将叶子pte.u拉高)

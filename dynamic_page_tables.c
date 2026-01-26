@@ -4,7 +4,7 @@
 #include <csrs.h>
 
 // 默认sv39，可在运行时切换
-page_table_mode_t current_page_table_mode = PAGE_TABLE_MODE_SV39;
+page_table_mode_t current_page_table_mode = PAGE_TABLE_MODE_SV48;
 
 void set_page_table_mode(page_table_mode_t mode) {
     current_page_table_mode = mode;
@@ -482,6 +482,21 @@ void pbmt_hspt_to_x(int pbmt_page){
     if (current_page_table_mode == PAGE_TABLE_MODE_SV48) {
         uintptr_t addr = TEST_PPAGE_BASE + 250 * PAGE_SIZE;
         hspt[4][pbmt_page] = (addr >> 2) | PTE_AD | test_page_perm_table[pbmt_page].vs;
+    }
+    if (current_page_table_mode == PAGE_TABLE_MODE_SV39) {
+        uintptr_t addr = TEST_PPAGE_BASE + 250 * PAGE_SIZE;
+        hspt[2][pbmt_page] = (addr >> 2) | PTE_AD | test_page_perm_table[pbmt_page].vs;
+    }
+}
+
+void pbmt_hspt_to_x_base_paddr(int pbmt_page , uintptr_t new_base_paddr){
+    if (current_page_table_mode == PAGE_TABLE_MODE_SV48) {
+        uintptr_t addr = new_base_paddr + 250 * PAGE_SIZE;
+        hspt[4][pbmt_page] = (addr >> 2) | PTE_AD | test_page_perm_table[pbmt_page].vs;
+    }
+    if (current_page_table_mode == PAGE_TABLE_MODE_SV39) {
+        uintptr_t addr = new_base_paddr + 250 * PAGE_SIZE;
+        hspt[2][pbmt_page] = (addr >> 2) | PTE_AD | test_page_perm_table[pbmt_page].vs;
     }
 }
 

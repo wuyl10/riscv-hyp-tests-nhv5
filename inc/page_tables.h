@@ -9,8 +9,8 @@
 #define PAGE_SHIFT (12)                                                             //页偏移为12位
 
 //三选一
-    #define sv39                                                            
-    // #define sv48
+    // #define sv39                                                            
+    #define sv48
     // #define sv39sv48
 
 #ifdef sv39
@@ -265,6 +265,7 @@ void vspt_switch();
 void hpt_switch();
 void print_page_table_type();
 void pbmt_hspt_to_x(int);
+void pbmt_hspt_to_x_base_paddr(int, uintptr_t);
 void hspt_u_mode_allow();
 void hspt_u_mode_allow_no_leaf();
 void hspt_del_D();

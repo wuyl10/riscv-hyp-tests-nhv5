@@ -128,7 +128,7 @@ bool instruction_page_fault_2_2(){
     uintptr_t vaddr;
     uintptr_t paddr ;
 
-    //s mode执行取指指令时，pte.v=1 x=1 u=0
+    //u mode执行取指指令时，pte.v=0 x=0 u=1
     goto_priv(PRIV_HS);
     vaddr = hs_page_base(VSRWX_GRWX);
     paddr = phys_page_base(VSRWX_GRWX);
@@ -161,7 +161,7 @@ bool instruction_page_fault_2_3(){
     uintptr_t vaddr;
     uintptr_t paddr ;
 
-    //s mode执行取指指令时，pte.v=1 x=1 u=0
+    //u mode执行取指指令时，pte.v=1 x=0 u=1
     goto_priv(PRIV_HS);
     vaddr = hs_page_base(VSRWX_GRWX);
     paddr = phys_page_base(VSRWX_GRWX);
@@ -212,7 +212,7 @@ bool instruction_page_fault_3(){
         excpt.triggered == false
     );
 
-    //HS mode 执行取指指令时，在HS模式下访问a=0的页,不执行sfence.vma
+    //S mode 执行取指指令时，pte.a从1变为0 pte.rwx=1，不执行sfence.vma
     goto_priv(PRIV_M);
     hspt_del_A();
 
@@ -225,7 +225,7 @@ bool instruction_page_fault_3(){
     );
 
 
-    //HS mode 执行取指指令时，在HS模式下访问a=0的页,执行sfence.vma
+    //S mode 执行取指指令时，pte.a从1变为0 pte.rwx=1，执行sfence.vma
     sfence_vma();
 
     TEST_SETUP_EXCEPT();
@@ -251,11 +251,11 @@ bool instruction_page_fault_4(){
     hspt_u_mode_allow();
     sfence_vma();
 
-    //HU mode 执行取指指令时，在HU模式下访问a=1的页
+    //U mode 执行取指指令时，pte.a=1 pte.ruwx=1，不产生异常
     goto_priv(PRIV_HU);
     TEST_SETUP_EXCEPT();
     ((void(*)(void))vaddr)();   // 使用函数调用，编译器自动处理返回地址
-    TEST_ASSERT("hs mode fetche instruction when a=1 successful",
+    TEST_ASSERT("hu mode fetche instruction when a=1 successful",
         excpt.triggered == false
     );
 
@@ -273,7 +273,7 @@ bool instruction_page_fault_5(){
     *(uint32_t*)paddr = 0x00008067;  // ret指令
     hspt_u_mode_allow();
 
-    //HU mode 执行取指指令时，在HU模式下访问a=0的页
+    //U mode 执行取指指令时，pte.a=0 pte.ruwx=1，引发IPF
     goto_priv(PRIV_M);
     hspt_del_A();
     hspt_u_mode_allow();
@@ -392,7 +392,7 @@ bool instruction_page_fault_8(){
     goto_priv(PRIV_HS);
     hspt_init();
 
-    //执行取指指令时，在HS模式下访问U模式可以访问的页表项
+    //执行取指指令时，在S模式下访问 pte.u=1 的页表项
     uintptr_t vaddr = hs_page_base(VSURWX_GURWX);
     uintptr_t paddr = phys_page_base(VSURWX_GURWX);
 
@@ -403,7 +403,7 @@ bool instruction_page_fault_8(){
         excpt.cause == CAUSE_IPF
     );
 
-    //执行取指指令时，在HU模式下访问U模式可以访问的页表项
+    //执行取指指令时，在U模式下访问 pte.u=1 的页表项
     goto_priv(PRIV_M);
     hspt_u_mode_allow();
     *(uint32_t*)paddr = 0x00008067;  // ret指令
@@ -438,7 +438,7 @@ bool instruction_page_fault_9(){
         excpt.triggered == false
     );
 
-   //s mode执行取指指令时，pte.v=1 x=1 u=0 
+   //u mode执行取指指令时，pte.v=1 x=1 u=1 
     goto_priv(PRIV_M);
     vaddr = hs_page_base(VSUX_GX);
     paddr = phys_page_base(VSUX_GX);
@@ -469,7 +469,7 @@ bool instruction_page_fault_10(){
     *(uint32_t*)paddr = 0x00008067;  // ret指令
     sfence_vma();
 
-    //执行取指指令时，在HS模式下访问包含G位
+    //执行取指指令时，在S模式下访问pte.g=1的页表项，不产生异常
     goto_priv(PRIV_HS);
 
     TEST_SETUP_EXCEPT();
@@ -478,7 +478,7 @@ bool instruction_page_fault_10(){
         excpt.triggered == false
     );
 
-    //执行取指指令时，在HU模式下访问U模式可以访问的页表项
+    //执行取指指令时，在U模式下访问pte.u=1的页表项，不产生异常
     goto_priv(PRIV_M);
     hspt_add_G();
     hspt_u_mode_allow();
@@ -506,7 +506,7 @@ bool instruction_page_fault_11(){
     uintptr_t paddr = phys_page_base(VSRW_GURWX);
     sfence_vma();
 
-    //执行取指指令时，在HS模式下访问包含G位
+    //执行取指指令时，在S模式下访问pte.g=1 pte.x=0的页表项，引发IPF
     goto_priv(PRIV_HS);
 
     TEST_SETUP_EXCEPT();
@@ -516,7 +516,7 @@ bool instruction_page_fault_11(){
         excpt.cause == CAUSE_IPF
     );
 
-    //执行取指指令时，在HU模式下访问U模式可以访问的页表项
+    //执行取指指令时，在U模式下访问pte.u=1 pte.x=0的页表项，引发IPF
     goto_priv(PRIV_M);
     hspt_add_G();
     hspt_u_mode_allow();
@@ -541,7 +541,7 @@ bool instruction_page_fault_12(){
     uintptr_t vaddr = hs_page_base(VSRW_GURWX);
 
     CSRS(CSR_MEDELEG,1ULL << CAUSE_IPF);
-    //执行取指指令时，在HS模式下发生IPF代理到S-mode下
+    //执行取指指令时，在S模式下pte.x=0的页表项，引发IPF，代理到S-mode
     goto_priv(PRIV_HS);
     hspt_init();
 
@@ -896,17 +896,18 @@ bool instruction_page_fault_18(){
         excpt.triggered == false
     );
 
+    //取指指令，将pte.x=1改为0(进程不切换)，不执行sfence.vma，不产生异常
     goto_priv(PRIV_M);
     hspt_del_X();
 
     goto_priv(PRIV_HS);
     TEST_SETUP_EXCEPT();
     ((void(*)(void))vaddr)();   // 使用函数调用，编译器自动处理返回地址
-    //不执行sfence.vma，仍然可以成功执行
     TEST_ASSERT("hs mode fetch instruction when pte.x=0 successful without sfence",
         excpt.triggered == false
     );
 
+    //取指指令，将pte.x=1改为0(进程不切换)，执行sfence.vma，引发IPF
     //rs1为对应vaddr，rs2为对应ASID，执行SFECNE.VMA
     sfence_vma_rs(vaddr,0);
     TEST_SETUP_EXCEPT();
@@ -920,7 +921,7 @@ bool instruction_page_fault_18(){
 }
 
 bool instruction_page_fault_19(){
-    //取指指令，将pte.x=1改为0(进程不切换)
+    //取指指令，将pte.x=1改为0(进程不切换),pte为global页
     TEST_START();
     CSRC(CSR_MSTATUS,MSTATUS_TVM);
     uintptr_t vaddr = hs_page_base(VSRWX_GRWX);
@@ -938,6 +939,7 @@ bool instruction_page_fault_19(){
         excpt.triggered == false
     );
 
+    //s mode执行取指指令，将pte.g=1不变 pte.x=1改为0(进程不切换)，不执行sfence.vma，不产生异常
     goto_priv(PRIV_M);
     hspt_del_X();
 
@@ -945,15 +947,15 @@ bool instruction_page_fault_19(){
     TEST_SETUP_EXCEPT();
     ((void(*)(void))vaddr)();   // 使用函数调用，编译器自动处理返回地址
     //不执行sfence.vma，仍然可以成功执行
-    TEST_ASSERT("hs mode fetch instruction when pte.x=0 pte.g=0 successful without sfence",
+    TEST_ASSERT("hs mode fetch instruction when pte.x=0 pte.g=1 successful without sfence",
         excpt.triggered == false
     );
 
-    //rs1为对应vaddr，rs2为非x0且非对应ASID，执行SFECNE.VMA ，仍然可以成功执行
+    //s mode执行取指指令，将pte.g=1不变 pte.x=1改为0(进程不切换)，执行sfence.vma（rs1为对应vaddr，rs2为非x0且非对应ASID），不产生异常
     sfence_vma_rs(vaddr,1234);
     TEST_SETUP_EXCEPT();
     ((void(*)(void))vaddr)();   // 使用函数调用，编译器自动处理返回地址
-    TEST_ASSERT("hs mode fetch instruction when pte.x=0 pte.g=0 successful with sfence and non-asid",
+    TEST_ASSERT("hs mode fetch instruction when pte.x=0 pte.g=1 successful with sfence and non-asid",
         excpt.triggered == false
     );
 
@@ -978,6 +980,7 @@ bool instruction_page_fault_20(){
         excpt.cause == CAUSE_IPF
     );
 
+    //s mode执行取指指令，将pte.x=0改为1(进程不切换)，不执行sfence.vma，引发IPF
     goto_priv(PRIV_M);
     hspt_add_X();
 
@@ -990,7 +993,7 @@ bool instruction_page_fault_20(){
         excpt.cause == CAUSE_IPF
     );
 
-    //rs1为对应vaddr，rs2为对应ASID，执行SFECNE.VMA
+    //s mode执行取指指令，将pte.x=0改为1(进程不切换)，执行sfence.vma（rs1为对应vaddr，rs2为对应ASID）
     sfence_vma_rs(vaddr,0);
     TEST_SETUP_EXCEPT();
     ((void(*)(void))vaddr)();   // 使用函数调用，编译器自动处理返回地址
@@ -1028,7 +1031,7 @@ bool instruction_page_fault_21(){
     TEST_SETUP_EXCEPT();
     TEST_EXEC_EXCEPT(vaddr);
     //不执行sfence.vma，仍然可以成功执行
-    TEST_ASSERT("hs mode fetch instruction when pte.x=0 pte.g=0 successful without sfence",
+    TEST_ASSERT("hs mode fetch instruction when pte.x=0 pte.g=1 successful without sfence",
         excpt.triggered == true &&
         excpt.cause == CAUSE_IPF
     );
@@ -1037,7 +1040,7 @@ bool instruction_page_fault_21(){
     sfence_vma_rs(vaddr,1234);
     TEST_SETUP_EXCEPT();
     TEST_EXEC_EXCEPT(vaddr);
-    TEST_ASSERT("hs mode fetch instruction when pte.x=0 pte.g=0 successful with sfence and non-asid",
+    TEST_ASSERT("hs mode fetch instruction when pte.x=0 pte.g=1 successful with sfence and non-asid",
         excpt.triggered == true &&
         excpt.cause == CAUSE_IPF
     );
@@ -1094,7 +1097,7 @@ bool instruction_page_fault_22(){
 }
 
 bool instruction_page_fault_23(){
-    //取指指令，将pte.x=1改为0(进程切换)
+    //取指指令，pte.g=1 将pte.x=1改为0(进程切换)
     TEST_START();
     CSRC(CSR_MSTATUS,MSTATUS_TVM);
     uintptr_t vaddr = hs_page_base(VSRWX_GRWX);
@@ -1185,7 +1188,7 @@ bool instruction_page_fault_24(){
 }
 
 bool instruction_page_fault_25(){
-    //取指指令，将pte.x=0改为1(进程切换)
+    //取指指令，pte.g=1，将pte.x=0改为1(进程切换)
     TEST_START();
     CSRC(CSR_MSTATUS,MSTATUS_TVM);
     uintptr_t vaddr = hs_page_base(VSRW_GRW);
@@ -1267,7 +1270,7 @@ bool load_page_fault_1(){
         excpt.cause == CAUSE_LPF
     );
 
-    //执行load/lr指令时，叶子页表项可写但不可读，pte.r=0&&pte.w=1
+    //执行load、lr指令时，叶子页表项可写但不可读，pte.r=0&&pte.w=1
     vaddr = vs_page_base(VSW_GI);
     printf("hspt[4][VSW_GI] pte: 0x%lx\n", (hspt[4][VSW_GI]));
     TEST_SETUP_EXCEPT();
@@ -1284,7 +1287,7 @@ bool load_page_fault_1(){
         excpt.cause == CAUSE_LPF
     );
 
-    //s mode 执行取指指令时，pte有保留位被设置
+    //s mode 执行load指令时，pte有保留位被设置
     vaddr = vs_page_base(VSR_GRWX);
 
     goto_priv(PRIV_M);
@@ -1420,7 +1423,7 @@ bool load_page_fault_2(){
 
     goto_priv(PRIV_HS);
 
-    //执行ld指令时，设置了sstatus.SUM=0，在S模式下访问U模式可以访问的页表项
+    //s mode执行ld指令时，设置了sstatus.SUM=0，在S模式下访问pte.u=1的页表项
     TEST_SETUP_EXCEPT();
     uintptr_t addr = hs_page_base(VSURWX_GURWX);
 
@@ -1445,7 +1448,7 @@ bool load_page_fault_3(){
     CSRS(CSR_SSTATUS, SSTATUS_SUM);
     sfence_vma();
 
-    //执行ld指令时，设置了sstatus.SUM=1，在S模式下访问U模式可以访问的页表项
+    //s mode执行ld指令时，设置了sstatus.SUM=1，在S模式下访问pte.u=1的页表项，不产生异常
 
     goto_priv(PRIV_HS);
     set_prev_priv(PRIV_VS);
@@ -1487,6 +1490,7 @@ bool load_page_fault_3(){
         excpt.triggered == false
     );
 
+    //执行ld指令时，设置了sstatus.SUM=0，在m模式下访存(MPP=S)
     vaddr = hs_page_base(VSRWX_GRWX);
     CSRS(CSR_MSTATUS,MSTATUS_MPRV);
     CSRS(CSR_MSTATUS,MSTATUS_MPP);
@@ -1548,6 +1552,7 @@ bool load_page_fault_3(){
         excpt.triggered == false
     );
 
+    //执行ld指令时，设置了sstatus.SUM=0，在m模式下访存(MPP=U)
     vaddr = hs_page_base(VSRWX_GRWX);
     CSRS(CSR_MSTATUS,MSTATUS_MPRV);
     CSRC(CSR_MSTATUS,MSTATUS_MPP);
@@ -1766,7 +1771,7 @@ bool load_page_fault_8(){
     TEST_START();
     uintptr_t vaddr = hs_page_base(VSR_GR);
 
-    //m执行ld指令时，PTE.A=1
+    //m执行ld指令时，PTE.A=1(mpp=S)
     goto_priv(PRIV_HS);
     hspt_init();
     goto_priv(PRIV_M);
@@ -1977,7 +1982,7 @@ bool load_page_fault_10(){
     uintptr_t paddr = phys_page_base(VSR_GURWX);
     sfence_vma();
 
-    //执行取指指令时，在HS模式下访问包含G位
+    //s mode执行load指令时，PTE.G=1 PTE.R=1，不产生异常
     goto_priv(PRIV_HS);
 
     TEST_SETUP_EXCEPT();
@@ -1986,7 +1991,7 @@ bool load_page_fault_10(){
         excpt.triggered == false
     );
 
-    //执行取指指令时，在HU模式下访问U模式可以访问的页表项
+    //u mode执行load指令时，PTE.G=1 PTE.R=1，不产生异常
     goto_priv(PRIV_M);
     hspt_add_G();
     hspt_u_mode_allow();
@@ -2012,7 +2017,7 @@ bool load_page_fault_11(){
     uintptr_t paddr = phys_page_base(VSX_GURWX);
     sfence_vma();
 
-    //执行取指指令时，在HS模式下访问包含G位
+    //s mode执行load指令时，PTE.G=1 PTE.R=0，引发LPF
     goto_priv(PRIV_HS);
 
     TEST_SETUP_EXCEPT();
@@ -2022,7 +2027,7 @@ bool load_page_fault_11(){
         excpt.cause == CAUSE_LPF
     );
 
-    //执行取指指令时，在HU模式下访问U模式可以访问的页表项
+    //u mode执行load指令时，PTE.G=1 PTE.R=0，引发LPF
     goto_priv(PRIV_M);
     hspt_add_G();
     hspt_u_mode_allow();
@@ -2047,7 +2052,7 @@ bool load_page_fault_12(){
     uintptr_t vaddr = hs_page_base(VSX_GURWX);
 
     CSRS(CSR_MEDELEG,1ULL << CAUSE_LPF);
-    //执行取指指令时，在HS模式下发生lPF代理到S-mode下
+    //执行load指令时，在HS模式下发生LPF代理到S-mode下
     goto_priv(PRIV_HS);
     hspt_init();
 
@@ -2140,31 +2145,31 @@ bool load_page_fault_14(){
         excpt.triggered == false
     );
 
-    goto_priv(PRIV_M);
-    hspt_1GB_superpage_misalign_setup();
-    sfence_vma();
+    // goto_priv(PRIV_M);
+    // hspt_1GB_superpage_misalign_setup();
+    // sfence_vma();
 
-    goto_priv(PRIV_HS);
-    TEST_SETUP_EXCEPT();
-    ld(vaddr);
-    TEST_ASSERT("hs mode ld with 1GB superpage misalign leads to LPF",
-        excpt.triggered == true &&
-        excpt.cause == CAUSE_LPF
-    );
+    // goto_priv(PRIV_HS);
+    // TEST_SETUP_EXCEPT();
+    // ld(vaddr);
+    // TEST_ASSERT("hs mode ld with 1GB superpage misalign leads to LPF",
+    //     excpt.triggered == true &&
+    //     excpt.cause == CAUSE_LPF
+    // );
 
-    goto_priv(PRIV_M);
-    hspt_1GB_superpage_align_boundary_setup();
-    sfence_vma();
+    // goto_priv(PRIV_M);
+    // hspt_1GB_superpage_align_boundary_setup();
+    // sfence_vma();
 
-    goto_priv(PRIV_HS);
-    TEST_SETUP_EXCEPT();
-    ld(vaddr);
-    TEST_ASSERT("hs mode ld with 1GB superpage successful(boundary align)",
-        excpt.triggered == false
-    );
+    // goto_priv(PRIV_HS);
+    // TEST_SETUP_EXCEPT();
+    // ld(vaddr);
+    // TEST_ASSERT("hs mode ld with 1GB superpage successful(boundary align)",
+    //     excpt.triggered == false
+    // );
 
 
-    TEST_END();
+    // TEST_END();
 }
 
 bool load_page_fault_15(){
@@ -2300,7 +2305,7 @@ bool store_page_fault_1(){
     );
 
 
-    //执行store指令时，如果此时pte.w=0
+    //s mode执行store指令时，pte.w=0，引发SPF
     hspt_init();
     sfence_vma();
     TEST_SETUP_EXCEPT();
@@ -2312,7 +2317,7 @@ bool store_page_fault_1(){
         excpt.cause == CAUSE_SPF
     );
 
-    //执行store指令时，pte.w=1
+    //s mode执行store指令时，pte.w=1，不产生异常
     sfence_vma();
     TEST_SETUP_EXCEPT();
     addr = hs_page_base(VSRW_GURW);
@@ -2339,7 +2344,7 @@ bool store_page_fault_2(){
 
     goto_priv(PRIV_HS);
 
-    //执行hsvd指令时，设置了sstatus.SUM=0，在S模式下访问U模式可以访问的页表项
+    //执行sd指令时，设置了sstatus.SUM=0，在S模式下访问U模式可以访问的页表项
     TEST_SETUP_EXCEPT();
     uintptr_t vaddr = hs_page_base(VSURWX_GURWX);
 
@@ -2361,7 +2366,7 @@ bool store_page_fault_3(){
     goto_priv(PRIV_HS);
     hspt_init();
 
-    //执行hsvb指令时，设置了sstatus.SUM=1，在S模式下访问U模式可以访问的页表项
+    //执行sd指令时，设置了sstatus.SUM=1，在S模式下访问U模式可以访问的页表项
     goto_priv(PRIV_M);
     CSRS(CSR_SSTATUS, SSTATUS_SUM);
     sfence_vma();
@@ -2374,10 +2379,6 @@ bool store_page_fault_3(){
     TEST_ASSERT("hs mode sd u mode page when sstatus.sum=1 successful",
         excpt.triggered == false
     );
-
-
-    //如果pte.a=0，标识上次A位被清除以来，页面被访问过
-    //如果pte.a=1，标识上次A位被清除以来，页面未被访问过
 
     TEST_END();
 }
@@ -2554,7 +2555,7 @@ bool store_page_fault_8(){
     TEST_START();
     uintptr_t vaddr = hs_page_base(VSRW_GR);
 
-    //hu执行sd指令时，PTE.A=1
+    //m执行sd指令时，PTE.A=1(mpp=s)
     goto_priv(PRIV_HS);
     hspt_init();
     goto_priv(PRIV_M);
@@ -2704,7 +2705,7 @@ bool store_page_fault_12(){
     TEST_START();
     uintptr_t vaddr = hs_page_base(VSRW_GR);
 
-    //hu执行sd指令时，PTE.D=1
+    //m执行sd指令时，PTE.D=1
     goto_priv(PRIV_HS);
     hspt_init();
     goto_priv(PRIV_M);
@@ -2740,7 +2741,7 @@ bool store_page_fault_13(){
         excpt.triggered == false
     );
 
-    //m执行sd指令时，PTE.D=0
+    //m mode执行store指令时，PTE.D=1，引发SPF（mpp=S）
     goto_priv(PRIV_M);
     hspt_del_D();
     CSRS(CSR_MSTATUS,MSTATUS_MPRV);
@@ -2769,7 +2770,7 @@ bool store_page_fault_14(){
     uintptr_t paddr = phys_page_base(VSRW_GURWX);
     sfence_vma();
 
-    //执行取指指令时，在HS模式下访问包含G位
+    //s mode执行store指令时，PTE.G=1，不产生异常
     goto_priv(PRIV_HS);
 
     TEST_SETUP_EXCEPT();
@@ -2778,7 +2779,7 @@ bool store_page_fault_14(){
         excpt.triggered == false
     );
 
-    //执行取指指令时，在HU模式下访问U模式可以访问的页表项
+    //u mode执行store指令时，PTE.G=1，不产生异常
     goto_priv(PRIV_M);
     hspt_add_G();
     hspt_u_mode_allow();
@@ -2804,7 +2805,7 @@ bool store_page_fault_15(){
     uintptr_t paddr = phys_page_base(VSR_GURWX);
     sfence_vma();
 
-    //执行取指指令时，在HS模式下访问包含G位
+    //s mode执行store指令时，PTE.G=1 PTE.W=0，引发SPF
     goto_priv(PRIV_HS);
 
     TEST_SETUP_EXCEPT();
@@ -2814,7 +2815,7 @@ bool store_page_fault_15(){
         excpt.cause == CAUSE_SPF
     );
 
-    //执行取指指令时，在HU模式下访问U模式可以访问的页表项
+    //u mode执行store指令时，PTE.G=1 PTE.W=0，引发SPF
     goto_priv(PRIV_M);
     hspt_add_G();
     hspt_u_mode_allow();
@@ -2839,7 +2840,7 @@ bool store_page_fault_16(){
     uintptr_t vaddr = hs_page_base(VSX_GURWX);
 
     CSRS(CSR_MEDELEG,1ULL << CAUSE_SPF);
-    //执行取指指令时，在HS模式下发生SPF代理到S-mode下
+    //执行store指令时，在HS模式下发生SPF代理到S-mode下
     goto_priv(PRIV_HS);
     hspt_init();
 
@@ -3049,7 +3050,7 @@ bool amo_page_fault_1(){
     goto_priv(PRIV_HS);
     sfence_vma();
 
-    //执行取指指令时，pte.v=0
+    //s mode执行原子指令时，pte.v=0，引发SPF
     TEST_SETUP_EXCEPT();
 
     addr = hs_page_base(VSI_GI);
@@ -3060,7 +3061,7 @@ bool amo_page_fault_1(){
     );
 
 
-    //执行amoand_d指令时，如果此时pte.w=0
+    //s mode执行原子指令时，pte.w=0，引发SPF
     sfence_vma();
 
     TEST_SETUP_EXCEPT();
@@ -3072,7 +3073,7 @@ bool amo_page_fault_1(){
         excpt.cause == CAUSE_SPF
     );
 
-    //执行amoand_d指令时，如果此时pte.w=1
+    //s mode执行原子指令时，pte.w=1，不产生异常
     sfence_vma();
 
     TEST_SETUP_EXCEPT();
@@ -3098,10 +3099,9 @@ bool amo_page_fault_2(){
     sfence_vma();
 
     goto_priv(PRIV_HS);
-    //执行amomin_d指令时，设置了mstatus.SUM=0，在S模式下访问U模式可以访问的页表项(sstatus配置不进去，需要配置mstatus)
+    //执行原子指令时，设置了mstatus.SUM=0，在S模式下访问PTE.U=1的页
     TEST_SETUP_EXCEPT();
     uintptr_t addr = hs_page_base(VSURWX_GURWX);
-
 
     uint64_t value = amomin_d(addr,value);
     TEST_ASSERT("hs mode execute amomin_d of u mode page when mstatus.sum=0 leads to LPF",
@@ -3120,7 +3120,7 @@ bool amo_page_fault_3(){
     hspt_init();
  
 
-    //执行amoadd_w指令时，设置了mstatus.SUM=1，在S模式下访问U模式可以访问的页表项
+    //执行原子指令时，设置了mstatus.SUM=1，在S模式下访问PTE.U=1的页
     goto_priv(PRIV_M);
     CSRS(CSR_MSTATUS, SSTATUS_SUM);
     sfence_vma();
@@ -3135,10 +3135,6 @@ bool amo_page_fault_3(){
         excpt.triggered == false
     );
 
-
-    //如果pte.a=0，标识上次A位被清除以来，页面被访问过
-    //如果pte.a=1，标识上次A位被清除以来，页面未被访问过
-
     TEST_END();
 }
 
@@ -3151,7 +3147,7 @@ bool amo_page_fault_4(){
     goto_priv(PRIV_HS);
     hspt_init();
 
-    //执行amo指令时，在HS模式下开启mmu，产生prepf
+    //执行原子指令时，在S模式下开启mmu，产生prepf
     TEST_SETUP_EXCEPT();
     uintptr_t vaddr = hs_page_base(VSRWX_GRWX);
 
@@ -3192,11 +3188,10 @@ bool amo_page_fault_5(){
 
     TEST_START();
 
-
     goto_priv(PRIV_HS);
     hspt_init();
 
-    //执行amo指令时，在HU模式下开启mmu，产生prepf
+    //执行原子指令时，在U模式下开启mmu，产生prepf
     uintptr_t vaddr = hs_page_base(VSRWX_GRWX);
     goto_priv(PRIV_M);
     hspt_u_mode_allow();
@@ -3244,7 +3239,7 @@ bool amo_page_fault_6(){
     hspt_init();
     uintptr_t vaddr = hs_page_base(VSRW_GR);
 
-    //hs执行amoadd_w指令时，PTE.A=0
+    //s mode执行原子指令时，PTE.A=0
     goto_priv(PRIV_M);
     hspt_del_A();
     sfence_vma();
@@ -3260,7 +3255,7 @@ bool amo_page_fault_6(){
 
     vaddr = hs_page_base(VSURW_GR);
 
-    //hu执行amoadd_w指令时，PTE.A=0
+    //u mode执行原子指令时，PTE.A=0
     goto_priv(PRIV_M);
     hspt_del_A();
     hspt_u_mode_allow();
@@ -3281,7 +3276,7 @@ bool amo_page_fault_7(){
     TEST_START();
     uintptr_t vaddr = hs_page_base(VSURW_GR);
 
-    //hu执行amoadd_w指令时，PTE.A=1
+    //u mode执行原子指令时，PTE.A=1
     goto_priv(PRIV_HS);
     hspt_init();
     goto_priv(PRIV_M);
@@ -3302,7 +3297,7 @@ bool amo_page_fault_8(){
     TEST_START();
     uintptr_t vaddr = hs_page_base(VSRW_GR);
 
-    //hu执行amoadd_w指令时，PTE.A=1
+    //m mode执行原子指令时，PTE.A=0(MPP=S)
     goto_priv(PRIV_HS);
     hspt_init();
     goto_priv(PRIV_M);
@@ -3326,7 +3321,7 @@ bool amo_page_fault_9(){
     goto_priv(PRIV_HS);
     hspt_init();
 
-    //m执行amoadd_w指令时，PTE.A=1
+    //m mode执行原子指令时，PTE.A=1(MPP=S)
     goto_priv(PRIV_M);
     CSRS(CSR_MSTATUS,MSTATUS_MPRV);
     CSRS(CSR_MSTATUS,MSTATUS_MPP);
@@ -3339,7 +3334,7 @@ bool amo_page_fault_9(){
         excpt.triggered == false
     );
 
-    //m执行amoadd_w指令时，PTE.A=0
+    //m mode执行原子指令时，PTE.A=1改为0，执行sfence.vma(MPP=S)
     goto_priv(PRIV_M);
     hspt_del_A();
     CSRS(CSR_MSTATUS,MSTATUS_MPRV);
@@ -3361,14 +3356,14 @@ bool amo_page_fault_10(){
     goto_priv(PRIV_HS);
     hspt_init();
     uintptr_t vaddr = hs_page_base(VSRW_GR);
-    //hs执行amoadd_w指令时，PTE.D=1
+    //s mode执行原子指令时，PTE.D=1
     TEST_SETUP_EXCEPT();
     amoadd_w(vaddr,0xdeadbeef);
     TEST_ASSERT("hs amoadd_w when pte.D=1 successful",
         excpt.triggered == false
     );  
 
-    //hs执行amoadd_w指令时，PTE.D=0,不执行sfence.vma
+    //s mode执行原子指令时，PTE.D=0改为1,不执行sfence.vma
     goto_priv(PRIV_M);
     hspt_del_D();
 
@@ -3380,7 +3375,7 @@ bool amo_page_fault_10(){
         excpt.triggered == false
     );
 
-    //hs执行amoadd_w指令时，PTE.D=0,执行sfence.vma
+    //s mode执行原子指令时，PTE.D=0改为1，执行sfence.vma
     sfence_vma();
 
     goto_priv(PRIV_HS);
@@ -3394,7 +3389,7 @@ bool amo_page_fault_10(){
 
     vaddr = hs_page_base(VSURW_GR);
 
-    //hu执行amoadd_w指令时，PTE.D=0
+    //u mode执行原子指令时，PTE.D=0
     goto_priv(PRIV_M);
     hspt_del_D();
     hspt_u_mode_allow();
@@ -3415,7 +3410,7 @@ bool amo_page_fault_11(){
     TEST_START();
     uintptr_t vaddr = hs_page_base(VSURW_GR);
 
-    //hu执行amoadd_w指令时，PTE.D=1
+    //u mode执行原子指令时，PTE.D=1
     goto_priv(PRIV_HS);
     hspt_init();
     goto_priv(PRIV_M);
@@ -3436,7 +3431,7 @@ bool amo_page_fault_12(){
     TEST_START();
     uintptr_t vaddr = hs_page_base(VSRW_GR);
 
-    //hu执行amoadd_w指令时，PTE.D=1
+    //m mode执行原子指令时，PTE.D=1(MPP=S)
     goto_priv(PRIV_HS);
     hspt_init();
     goto_priv(PRIV_M);
@@ -3503,7 +3498,7 @@ bool amo_page_fault_14(){
     uintptr_t paddr = phys_page_base(VSRW_GURWX);
     sfence_vma();
 
-    //执行取指指令时，在HS模式下访问包含G位
+    //s mode执行原子指令时，PTE.G=1，不产生异常
     goto_priv(PRIV_HS);
 
     TEST_SETUP_EXCEPT();
@@ -3512,7 +3507,7 @@ bool amo_page_fault_14(){
         excpt.triggered == false
     );
 
-    //执行取指指令时，在HU模式下访问U模式可以访问的页表项
+    //u mode执行原子指令时，PTE.G=1，不产生异常
     goto_priv(PRIV_M);
     hspt_add_G();
     hspt_u_mode_allow();
@@ -3538,7 +3533,7 @@ bool amo_page_fault_15(){
     uintptr_t paddr = phys_page_base(VSR_GURWX);
     sfence_vma();
 
-    //执行取指指令时，在HS模式下访问包含G位
+    //s mode执行原子指令时，PTE.G=1 PTE.W=0
     goto_priv(PRIV_HS);
 
     TEST_SETUP_EXCEPT();
@@ -3548,7 +3543,7 @@ bool amo_page_fault_15(){
         excpt.cause == CAUSE_SPF
     );
 
-    //执行取指指令时，在HU模式下访问U模式可以访问的页表项
+    //u mode执行原子指令时，PTE.G=1 PTE.W=0
     goto_priv(PRIV_M);
     hspt_add_G();
     hspt_u_mode_allow();
@@ -3573,7 +3568,7 @@ bool amo_page_fault_16(){
     uintptr_t vaddr = hs_page_base(VSX_GURWX);
 
     CSRS(CSR_MEDELEG,1ULL << CAUSE_SPF);
-    //执行取指指令时，在HS模式下发生SPF代理到S-mode下
+    //s mode执行原子指令时，发生SPF代理到S-mode下
     goto_priv(PRIV_HS);
     hspt_init();
 

@@ -18,7 +18,7 @@ bool priv_change_1(){
     uintptr_t vaddr_f = vs_page_base(VSI_GI);      
     uint64_t value = 0xdeadbeef;
 
-    //V=0，HS模式下发生异常，关闭代理，切换到M态处理异常，处理结束执行mret返回HS态
+    //S模式下发生异常，关闭代理，切换到M态处理异常，处理结束执行mret返回HS态
     TEST_SETUP_EXCEPT();  
     goto_priv(PRIV_M);
     CSRW(medeleg,0);
@@ -51,7 +51,7 @@ bool priv_change_2(){
     uintptr_t vaddr_f = vs_page_base(VSI_GI);      
     uint64_t value = 0xdeadbeef;
 
-    //V=0，HS模式下发生异常，关闭所有代理，切换到M态处理异常
+    //S模式下发生异常，关闭所有代理，切换到M态处理异常
     goto_priv(PRIV_M);
     CSRC(medeleg, 1 << CAUSE_LPF);         
     goto_priv(PRIV_HS);     
@@ -74,7 +74,7 @@ bool priv_change_3(){
     TEST_START();
 
 
-    //V=0，M模式下发生异常，M态处理异常
+    //M模式下发生异常，M态处理异常
     goto_priv(PRIV_M);
     reset_state();
     CSRW(medeleg, 0); 
@@ -95,7 +95,7 @@ bool priv_change_4(){
     TEST_START();
 
 
-    //V=0，U模式下发生异常，关闭代理，切换到M态处理异常
+    //U模式下发生异常，关闭代理，切换到M态处理异常
     goto_priv(PRIV_M);
     CSRC(medeleg,1ULL << 2);         
 
@@ -120,11 +120,10 @@ bool priv_change_5(){
     TEST_START();
 
 
-    //V=0，U模式下发生异常，打开代理medeleg/mideleg，切换到HS态处理异常，异常处理结束执行sret恢复到U态
+    //U模式下发生异常，打开代理medeleg，切换到HS态处理异常，异常处理结束执行sret恢复到U态
     goto_priv(PRIV_M);
     reset_state();
     CSRW(medeleg,1ULL << 2);
-    CSRW(mideleg,(uint64_t)-1);     
     CSRS(medeleg, (1ULL << 8));       //防止后续u->m 出错
 
     goto_priv(PRIV_HU);     
@@ -148,12 +147,10 @@ bool priv_change_5(){
 bool priv_change_6(){
     TEST_START();
 
-    //V=0，HS模式下发生异常，打开代理medeleg/mideleg，切换到HS态处理异常
+    //S模式下发生异常，打开代理medeleg，切换到S态处理异常
 
     goto_priv(PRIV_M);     
     CSRW(medeleg,1ULL << 2);
-    CSRW(mideleg,(uint64_t)-1);     
-
 
     goto_priv(PRIV_HS);
     TEST_SETUP_EXCEPT();        
@@ -172,36 +169,7 @@ bool priv_change_6(){
 
 
 
-
 bool priv_change_7(){
-    TEST_START();
-
-    //V=0，U模式下发生异常，打开代理medeleg/mideleg，关闭代理hedeleg/hideleg，切换到HS态处理异常
-    
-    goto_priv(PRIV_M);
-    reset_state();
-    CSRW(medeleg,1ULL << 2);
-    CSRW(mideleg,(uint64_t)-1);     
-    CSRS(medeleg, (1ULL << 8));       //防止后续u->m 出错
-
-    
-    goto_priv(PRIV_HU);     
-
-    TEST_SETUP_EXCEPT();        
-    CSRW(medeleg, 0); 
-
-    TEST_ASSERT("hu trigger except that priv change to HS mod and sret to hu mode when medeleg/mideleg==1 and hedeleg/hideleg==0",         
-        excpt.triggered == true &&
-        excpt.priv == PRIV_HS &&
-        curr_priv == PRIV_HU
-    );
-
-    TEST_END();
-
-}
-
-
-bool priv_change_8(){
     TEST_START();
 
     //ecall to M_mode
@@ -215,7 +183,7 @@ bool priv_change_8(){
     goto_priv(PRIV_HU);
     goto_priv(PRIV_HS);
 
-    // random priv change
+    // random priv change(待更改，该随机切换开销过大)
     for(int i = 0; i < 10; i++){
         int rand1=CSRR(CSR_TIME);  
         int rand2=CSRR(CSR_CYCLE);    
@@ -232,33 +200,14 @@ bool priv_change_8(){
 
 }
 
-bool priv_change_9(){
+
+
+bool priv_change_8(){
     
     TEST_START();
 
 
-    //U模式下发生异常，打开全部代理，切换到M态处理异常
-    goto_priv(PRIV_M);
-    CSRW(medeleg,(uint64_t)-1);
-
-    goto_priv(PRIV_HU);
-
-    TEST_SETUP_EXCEPT();
-    CSRR(CSR_MCAUSE);
-    TEST_ASSERT("hu trigger except that priv change to hs mode when medeleg==1",         
-        excpt.triggered == true && 
-        excpt.priv==PRIV_HS &&
-        curr_priv == PRIV_HU
-    );
-
-}
-
-bool priv_change_10(){
-    
-    TEST_START();
-
-
-    //M模式下发生异常，打开全部代理，切换到M态处理异常
+    //M模式下发生异常，打开异常代理，切换到M态处理异常
     goto_priv(PRIV_M);
     CSRW(medeleg,(uint64_t)-1);
 
@@ -280,13 +229,18 @@ bool caogao(){
     
     goto_priv(PRIV_M);
 
-    goto_priv(PRIV_HS);
-    hspt_init();
-    uintptr_t vaddr = vs_page_base(VSRWX_GRWX);
-    TEST_SETUP_EXCEPT();        
-    lh(vaddr+0xffc);
-    excpt_info();
+    CSRS(CSR_MSTATUS, MSTATUS_SUM); 
+    CSRS(CSR_MSTATUS, MSTATUS_MXR); 
+    printf("MSTATUS after set SUM and MXR: %lx\n", CSRR(CSR_MSTATUS));
 
+    goto_priv(PRIV_HS);
+    printf("SSTATUS before set SUM and MXR: %lx\n", CSRR(CSR_SSTATUS));
+    CSRC(CSR_SSTATUS, SSTATUS_SUM); 
+    CSRC(CSR_SSTATUS, SSTATUS_MXR);
+    printf("SSTATUS after clear SUM and MXR: %lx\n", CSRR(CSR_SSTATUS));
+
+    goto_priv(PRIV_M);
+    printf("MSTATUS before clear SUM and MXR: %lx\n", CSRR(CSR_MSTATUS));
 
     TEST_END();
 }

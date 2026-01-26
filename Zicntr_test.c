@@ -4,7 +4,7 @@
 bool time_test_1() {
 
 
-    //当mcounteren.TM=0时，hu/vu/hs/vs 不可访问time寄存器
+    //当mcounteren.TM=0时，hu/hs 不可访问time寄存器
 
     TEST_START();    
     goto_priv(PRIV_M);
@@ -148,7 +148,7 @@ bool time_test_5() {
 
 bool time_test_6() {
 
-    //当mcounteren.TM=0,hcounteren=0,scounteren=0时，m可访问time寄存器
+    //当mcounteren.TM=0,scounteren=0时，m可访问time寄存器
 
 
     TEST_START();    
@@ -169,7 +169,7 @@ bool time_test_6() {
 bool cycle_test_1() {
 
 
-    //当mcounteren.CY=0时，hu/vu/hs/vs 不可访问cycle寄存器
+    //当mcounteren.CY=0时，hu/hs 不可访问cycle寄存器
 
     TEST_START();    
     goto_priv(PRIV_M);
@@ -413,7 +413,7 @@ bool cycle_test_6() {
 bool instret_test_1() {
 
 
-    //当mcounteren.IR=0时，hu/vu/hs/vs 不可访问instret寄存器
+    //当mcounteren.IR=0时，hu/hs 不可访问instret寄存器
 
     TEST_START();    
     goto_priv(PRIV_M);
@@ -645,7 +645,7 @@ bool instret_test_6() {
 bool HPM_test_1() {
 
 
-    //当mcounteren.HPM3=0时，hu/vu/hs/vs 不可访问hpmcounter3寄存器
+    //当mcounteren.HPM3=0时，hu/hs 不可访问hpmcounter3寄存器
 
     TEST_START();    
     goto_priv(PRIV_M);
@@ -859,7 +859,7 @@ bool HPM_test_5() {
 
 bool HPM_test_6() {
 
-    //当mcounteren.HPM3=0,hcounteren=0,scounteren=0时，m可访问hpmcounter3寄存器
+    //当mcounteren.HPM3=0,scounteren=0时，m可访问hpmcounter3寄存器
 
 
     TEST_START();    

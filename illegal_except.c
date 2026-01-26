@@ -214,7 +214,7 @@ bool illegal_except_6() {
 
     TEST_START();
     
-    //mstatus.TVM=1，尝试在S模式或HS模式下执行SINVAL.VMA
+    //mstatus.TVM=1，尝试在S模式下执行SINVAL.VMA
     goto_priv(PRIV_M);
     reset_state();
     CSRS(CSR_MSTATUS,MSTATUS_TVM);

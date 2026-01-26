@@ -17,16 +17,6 @@ bool ebreak_tests_1() {
         excpt.cause == CAUSE_BKP
     ); 
 
-    TEST_END();
-
-}
-
-
-
-bool ebreak_tests_2() {
-
-    TEST_START();
-
     //HS模式下执行ebreak指令
     goto_priv(PRIV_HS);
     TEST_SETUP_EXCEPT();
@@ -37,14 +27,6 @@ bool ebreak_tests_2() {
         excpt.triggered == true &&
         excpt.cause == CAUSE_BKP
     ); 
-
-    TEST_END();
-
-}
-
-bool ebreak_tests_3() {
-
-    TEST_START();
 
     //HU模式下执行ebreak指令
     goto_priv(PRIV_HU);
@@ -61,14 +43,48 @@ bool ebreak_tests_3() {
 
 }
 
-bool ebreak_tests_4() {
+
+
+bool ebreak_tests_2() {
 
     TEST_START();
 
-    //S模式下切到ebreak指令的pc，但是该pc会导致access fault
-    goto_priv(PRIV_HS);
-    hspt_init();
+    //m模式下执行ebreak指令
+    goto_priv(PRIV_M);
+    CSRW(CSR_MEDELEG,(uint64_t)-1);
+    TEST_SETUP_EXCEPT();
+    
+    ebreak();
 
-    TEST_END();
+    TEST_ASSERT("m mode ebreak cause to Breakpoint",
+        excpt.triggered == true &&
+        excpt.cause == CAUSE_BKP &&
+        excpt.priv == PRIV_M
+    ); 
+
+    //HS模式下执行ebreak指令
+    goto_priv(PRIV_HS);
+    TEST_SETUP_EXCEPT();
+
+    ebreak();
+
+    TEST_ASSERT("hs mode ebreak cause to Breakpoint",
+        excpt.triggered == true &&
+        excpt.cause == CAUSE_BKP &&
+        excpt.priv == PRIV_HS
+    ); 
+
+    //HU模式下执行ebreak指令
+    goto_priv(PRIV_HU);
+    TEST_SETUP_EXCEPT();
+
+    ebreak();
+
+    TEST_ASSERT("hu mode ebreak cause to Breakpoint",
+        excpt.triggered == true &&
+        excpt.cause == CAUSE_BKP &&
+        excpt.priv == PRIV_HS
+    ); 
+
 
 }

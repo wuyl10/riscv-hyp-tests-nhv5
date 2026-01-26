@@ -86,7 +86,6 @@ bool svpbmt_test_2() {
     bool check2 = ld(vaddr2) == 0xdeadbeef;
     TEST_ASSERT("before fence and cbo_inval, gets right values(pbmt0)", check1);
     TEST_ASSERT("before fence and cbo_inval, gets right values(pbmt2)", check2);
-printf("vaddr1=0x%lx, vaddr2=0x%lx\n", vaddr1, vaddr2);
     fence_iorw_iorw();
     cbo_inval(vaddr3);
     bool check1_after = ld(vaddr1) == 0xdeadbeef;
@@ -101,7 +100,7 @@ printf("vaddr1=0x%lx, vaddr2=0x%lx\n", vaddr1, vaddr2);
 
 bool svpbmt_test_3() {
 
-    //PTE 的 PBMT 位设置为 3（Reserved），访问主存,触发页错误（Page-Fault）
+    //PTE 的 PBMT 位设置为 3（Reserved），访问主存，引发PF
     TEST_START();    
     goto_priv(PRIV_M);
     CSRS(CSR_MENVCFG,MENVCFG_PBMTE);
@@ -162,7 +161,7 @@ bool svpbmt_test_3() {
 
 bool svpbmt_test_4() {
 
-    //PTE 62-61 位在非叶 PTE 设置非 0,触发页错误
+    //PTE 62-61 位在非叶 PTE 设置非 0，引发PF
     TEST_START();    
     goto_priv(PRIV_M);
     CSRS(CSR_MENVCFG,MENVCFG_PBMTE);
@@ -170,8 +169,16 @@ bool svpbmt_test_4() {
     goto_priv(PRIV_HS);
     hspt_init();
 
+#ifdef sv48
     hspt[1][4] = 
-        PTE_V |  PTE_Pbmt1 | (((uintptr_t)&hspt[2][0]) >> 2);        //sv48中是这样（若是其它的则要修改）
+        PTE_V |  PTE_Pbmt1 | (((uintptr_t)&hspt[2][0]) >> 2);
+#endif
+
+#ifdef sv39
+    hspt[1][0] = 
+        PTE_V |  PTE_Pbmt2 | (((uintptr_t)&hspt[2][0]) >> 2);
+#endif
+
     uintptr_t vaddr;
     uintptr_t addr;
 
@@ -1043,35 +1050,29 @@ bool svpbmt_test_16(){
     goto_priv(PRIV_HS);
     hspt_init();
     goto_priv(PRIV_M);
-    hspt_leaf_change_base_paddr(VSRWXPbmt2_GURWXPbmt0, 0x30000000000);
-    hspt_leaf_change_base_paddr(VSRWXPbmt0_GURWXPbmt0, 0x30000000000);
     hspt_leaf_change_base_paddr(X, 0x30000000000);
     sfence_vma();
-    goto_priv(PRIV_HS);
 
     //让两个vaddr指向同一个addr，但是pbmt不同
-    pbmt_hspt_to_x(VSRWXPbmt0_GURWXPbmt0);
-    pbmt_hspt_to_x(VSRWXPbmt2_GURWXPbmt0);
+    pbmt_hspt_to_x_base_paddr(VSRWXPbmt0_GURWXPbmt0, 0x30000000000);
+    pbmt_hspt_to_x_base_paddr(VSRWXPbmt2_GURWXPbmt0, 0x30000000000);
     sfence_vma();
 
-
+    goto_priv(PRIV_HS);
     sd(vaddr1, 0x11);    
     
     fence_iorw_iorw();
     cbo_inval(vaddr3);
     fence_iorw_iorw();
-
     sd(vaddr2, 0xdeadbeef);    //绕过cache
 
     fence_iorw_iorw();
     cbo_inval(vaddr3);
     fence_iorw_iorw();
 
-    ld(vaddr1);    
-
     bool check = ld(vaddr1) == 0xdeadbeef;
     TEST_ASSERT("gets right values when pbmt change (cbo instr)", check);
-
+    printf("values = %llx \n ", ld(vaddr1));
 
     TEST_END(); 
 
@@ -1122,26 +1123,25 @@ bool svpbmt_test_17(){
     hspt_leaf_change_base_paddr(VSRWXPbmt0_GURWXPbmt0, 0x30000000000);
     hspt_leaf_change_base_paddr(X, 0x30000000000);
     sfence_vma();
-    write64(addr1, 0x11);
+    sd(addr3, 0x11);
 
     goto_priv(PRIV_HS);
 
     //让两个vaddr指向同一个addr，但是pbmt不同
-    pbmt_hspt_to_x(VSRWXPbmt0_GURWXPbmt0);
-    pbmt_hspt_to_x(VSRWXPbmt2_GURWXPbmt0);
+    pbmt_hspt_to_x_base_paddr(VSRWXPbmt0_GURWXPbmt0, 0x30000000000);
+    pbmt_hspt_to_x_base_paddr(VSRWXPbmt2_GURWXPbmt0, 0x30000000000);
     sfence_vma();
 
+    sd(vaddr3, 0x11);
     sd(vaddr2, 0xdeadbeef);    //绕过cache
 
     goto_priv(PRIV_M);
 
-    ld(addr3);    
-
-    bool check = ld(addr3) == 0x11;
+    bool check = ld(addr2) == 0x11;
     TEST_ASSERT("gets cache values when pbmt change from S mode to M ", check);
 
     goto_priv(PRIV_HS);
-    check = ld(vaddr1) == 0xdeadbeef;
+    check = ld(vaddr2) == 0xdeadbeef;
     TEST_ASSERT("gets mem values when change from M mode to S(pbmt=2)", check);
 
     TEST_END(); 

@@ -211,7 +211,7 @@ bool mix_instruction_2(){
 
     TEST_SETUP_EXCEPT();
 
-    lb(0x80000100UL << 2);    //访问区域内地址
+    lb(0x80000100ULL << 2);    //访问区域内地址
 
 
     TEST_ASSERT("m mode lb when pmpcfg.R=0 and pmpcfg.L=1 leads to LAF",        //预期产生load access fault
@@ -248,7 +248,7 @@ bool mix_instruction_2(){
     goto_priv(PRIV_HS);
     TEST_SETUP_EXCEPT();    
     
-    amoadd_d(0x80000100UL << 2 , 0xdeadbeef);
+    amoadd_d(0x80000100ULL << 2 , 0xdeadbeef);
 
     TEST_ASSERT("hs mode amoadd_d when pmpcfg.W=0 and pmpcfg.L=1 leads to SAF",
         excpt.triggered == true &&
@@ -283,7 +283,7 @@ bool mix_instruction_2(){
     goto_priv(PRIV_HS);
     TEST_SETUP_EXCEPT();    
     
-    TEST_EXEC_EXCEPT(0x80000100UL << 2);
+    TEST_EXEC_EXCEPT(0x80000100ULL << 2);
 
     TEST_ASSERT("hs mode fetch instruction when pmpcfg.X=0 and pmpcfg.L=1 leads to IAF",
         excpt.triggered == true &&

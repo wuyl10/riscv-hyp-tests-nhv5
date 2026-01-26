@@ -48,7 +48,7 @@ int trap = 0;
         printf("进入%s模式tvec指向入口(%d号中断)\n", #mode, num); \
         if (trap == 1) { \
             printf("mcause=%llx\n",CSRR(CSR_MCAUSE)); \
-            printf("处理中断号 %d,产生中断:\n", num); \
+            printf("处理中断号 %d,产生中断-\n", num); \
             if(#mode == "m"){\
                 trap = 0; \
                 printf("mie=%llx\n",CSRR(CSR_MIE));\
@@ -208,8 +208,8 @@ bool mtvec_test_1() {
     CSRS(CSR_MTVEC , 1ULL << 0);
 
     TEST_SETUP_EXCEPT();
-    printf("目的:m模式下,mtvec.mode=vectored.未开启中断代理,产生2号软件中断\n");
-    printf("入口：");
+    printf("目的-m模式下,mtvec.mode=vectored.未开启中断代理,产生2号软件中断\n");
+    printf("入口-");
     CSRS(mip, 1ULL << 1);
 
     TEST_ASSERT("m模式下,mtvec.mode=vectored.未开启中断代理,产生2号软件中断",
@@ -230,8 +230,8 @@ bool mtvec_test_2() {
     CSRS(CSR_MTVEC , 1ULL << 0);
 
     TEST_SETUP_EXCEPT();
-    printf("目的:m模式下,mtvec.mode=vectored,未开启异常代理,产生异常\n");
-    printf("入口：");
+    printf("目的-m模式下,mtvec.mode=vectored,未开启异常代理,产生异常\n");
+    printf("入口-");
     CSRW(CSR_MCONFIGPTR,0xfff);     //访问只读csr
 
     TEST_ASSERT("m模式下,mtvec.mode=vectored,未开启异常代理,产生异常",
@@ -253,8 +253,8 @@ bool mtvec_test_3() {
 
     TEST_SETUP_EXCEPT();
     goto_priv(PRIV_HS);
-    printf("目的:HS模式下,mtvec.mode=vectored,未开启异常代理,产生异常\n");
-    printf("入口：");
+    printf("目的-HS模式下,mtvec.mode=vectored,未开启异常代理,产生异常\n");
+    printf("入口-");
     CSRR(CSR_MSTATUS);  
 
     TEST_ASSERT("HS模式下,mtvec.mode=vectored,未开启异常代理,产生异常",
@@ -276,8 +276,8 @@ bool mtvec_test_4() {
 
     goto_priv(PRIV_HU);
     TEST_SETUP_EXCEPT();
-    printf("目的:HU模式下,mtvec.mode=vectored,未开启异常代理,产生异常\n");
-    printf("入口：");
+    printf("目的-HU模式下,mtvec.mode=vectored,未开启异常代理,产生异常\n");
+    printf("入口-");
     hfence_vvma();
 
     TEST_ASSERT("HU模式下,mtvec.mode=vectored,未开启异常代理,产生异常",
@@ -313,8 +313,8 @@ bool mtvec_test_5() {
 
     TEST_SETUP_EXCEPT();
     goto_priv(PRIV_HS);
-    printf("目的:HS模式下,mtvec.mode=vectored,未开启中断代理,产生2号软件中断\n");
-    printf("入口：");
+    printf("目的-HS模式下,mtvec.mode=vectored,未开启中断代理,产生2号软件中断\n");
+    printf("入口-");
 
     CSRS(sip, 1ULL << 1);
     
@@ -343,8 +343,8 @@ bool mtvec_test_6() {
 
     TEST_SETUP_EXCEPT();
     trap = 9;
-    printf("目的:m模式下,mtvec.mode=direct.未开启中断代理,产生2号软件中断,跳出来的pc是个异常地址(access fault)\n");
-    printf("入口：");
+    printf("目的-m模式下,mtvec.mode=direct.未开启中断代理,产生2号软件中断,跳出来的pc是个异常地址(access fault)\n");
+    printf("入口-");
     CSRS(mip, 1ULL << 1);
 
     TEST_ASSERT("m模式下,mtvec.mode=direct.未开启中断代理,产生2号软件中断,跳出来的pc是个异常地址(access fault)",
@@ -369,8 +369,8 @@ bool mtvec_test_7() {
     CSRC(CSR_MTVEC , 1ULL << 0);
 
     TEST_SETUP_EXCEPT();
-    printf("目的:m模式下,mtvec.mode=direct.未开启中断代理,产生2号软件中断,跳出来的pc是个异常地址(illegal instruction)\n");
-    printf("入口：");
+    printf("目的-m模式下,mtvec.mode=direct.未开启中断代理,产生2号软件中断,跳出来的pc是个异常地址(illegal instruction)\n");
+    printf("入口-");
     CSRS(mip, 1ULL << 1);
     CSRW(CSR_MCONFIGPTR,0xfff);
 
@@ -384,7 +384,7 @@ bool stvec_test_1() {
 
     TEST_START();
 
-    //hs模式下，开启了mideleg中断代理，关闭了hideleg中断代理，发生2号软件中断  
+    //hs模式下，开启了mideleg中断代理，发生2号软件中断  
 
     goto_priv(PRIV_M);
     CSRS(CSR_MSTATUS,1ULL << 3);
@@ -401,7 +401,7 @@ bool stvec_test_1() {
 
     TEST_SETUP_EXCEPT();
     goto_priv(PRIV_HS);
-    printf("入口：");
+    printf("入口-");
     CSRS(sip, 1ULL << 1);
     
     TEST_ASSERT("HS模式下,mtvec.mode=vectored,mideleg=1,hideleg=0,产生2号软件中断",
@@ -413,7 +413,7 @@ bool stvec_test_2() {
 
     TEST_START();
 
-    //HS模式下，开启了medeleg代理，关闭hedeleg异常代理，发生异常
+    //HS模式下，开启了medeleg代理，发生异常
 
     goto_priv(PRIV_M);
 
@@ -438,7 +438,7 @@ bool stvec_test_2() {
     vaddr = hs_page_base(VSRWX_GI);
 
     CSRC(CSR_SSTATUS, SSTATUS_MXR);
-    printf("入口：");
+    printf("入口-");
     hlvh(vaddr);
     TEST_ASSERT("HS模式下,mtvec.mode=vectored,medeleg=1,hedeleg=0,产生异常",
         excpt.triggered == true 
@@ -450,7 +450,7 @@ bool stvec_test_3() {
 
     TEST_START();
 
-    //HU模式下，开启了medeleg代理，关闭hedeleg异常代理，发生异常
+    //HU模式下，开启了medeleg代理，发生异常
 
     goto_priv(PRIV_M);
 
@@ -462,7 +462,7 @@ bool stvec_test_3() {
 
     goto_priv(PRIV_HU);
     TEST_SETUP_EXCEPT();      
-    printf("入口：");
+    printf("入口-");
     CSRR(CSR_MSTATUS);
     
     TEST_ASSERT("HU模式下,mtvec.mode=vectored,medeleg=1,hedeleg=0,产生异常",
@@ -488,7 +488,7 @@ bool mnret_test_1() {
     CSRS(CSR_MTVEC , 1ULL << 0);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     CSRS(mip, 1ULL << 1);
 
     TEST_ASSERT("m模式下,mtvec.mode=vectored.未开启中断代理,产生2号软件中断,执行mnret返回",      //要修改xtvec_test_asm.S中的返回指令
@@ -497,7 +497,7 @@ bool mnret_test_1() {
 }
 
 bool mnret_test_2() {
-    //m模式下，当mtvec.mode=vectored，mstatus.MDT=1,mnstatus.NMIE=1时，产生异常
+    //m模式下，当mtvec.mode=vectored，mnstatus.NMIE=1时，产生异常
     TEST_START();
 
     goto_priv(PRIV_M);
@@ -518,7 +518,7 @@ bool mnret_test_2() {
     printf("mtvec=%llx \n",CSRR(CSR_MTVEC));
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     CSRW(CSR_MCONFIGPTR,0xfff);
     excpt_info();
     TEST_ASSERT("m模式下,mtvec.mode=vectored,mstatus.MDT=1,mnstatus.NMIE=1时产生异常",      
@@ -548,7 +548,7 @@ bool smrnmi_test_1() {
 
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     CSRS(mip, 1ULL << 1);
 
     TEST_ASSERT("m模式下,mtvec.mode=vectored.未开启中断代理,产生2号软件中断,执行mnret返回",      
@@ -578,8 +578,8 @@ bool smrnmi_test_2() {
 
 
     TEST_SETUP_EXCEPT();
-    printf("目的:m模式下,mtvec.mode=vectored,mstatus.MDT=1,mnstatus.NMIE=1时产生异常\n");
-    printf("入口：");
+    printf("目的-m模式下,mtvec.mode=vectored,mstatus.MDT=1,mnstatus.NMIE=1时产生异常\n");
+    printf("入口-");
     CSRW(CSR_MCONFIGPTR,0xfff);
     excpt_info();
     TEST_ASSERT("m模式下,mtvec.mode=vectored,mstatus.MDT=1,mnstatus.NMIE=1时产生异常",      
@@ -607,7 +607,7 @@ bool m_double_trap_10() {
     CSRS(CSR_MTVEC , 1ULL << 0);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 1;
     double_trap_enabled = true;    //用来控制handler中的处理
     CSRS(mip, 1ULL << 9);
@@ -629,7 +629,7 @@ bool m_double_trap_11() {
     CSRS(CSR_MTVEC , 1ULL << 0);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 1;
     double_trap_enabled = true;    //用来控制handler中的处理
     CSRW(CSR_MCONFIGPTR,0xfff);
@@ -651,7 +651,7 @@ bool m_double_trap_12() {
     CSRS(CSR_MTVEC , 1ULL << 0);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 2;
     double_trap_enabled = true;    //用来控制handler中的处理
     CSRW(CSR_MCONFIGPTR,0xfff);
@@ -674,8 +674,8 @@ bool m_double_trap_13() {
     CSRS(CSR_MSTATUS , MSTATUS_MDT);
 
     TEST_SETUP_EXCEPT();
-    printf("目的：当发生异常需进入 M-mode 时，若当前 MDT = 1 ,结果发生unexpected trap");
-    printf("入口：");
+    printf("目的-当发生异常需进入 M-mode 时，若当前 MDT = 1 ,结果发生unexpected trap");
+    printf("入口-");
     CSRW(CSR_MCONFIGPTR,0xfff);
 
     TEST_ASSERT("当发生异常需进入 M-mode 时，若当前 MDT = 1 ,结果发生unexpected trap",
@@ -701,7 +701,7 @@ bool m_double_trap_14() {
     CSRS(mie, 1ULL << 1);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     CSRS(mip, 1ULL << 1);
     goto_priv(PRIV_HS);
 
@@ -729,7 +729,7 @@ bool m_double_trap_15() {
     CSRS(mie, 1ULL << 1);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     CSRS(mip, 1ULL << 1);
     goto_priv(PRIV_HS);
 
@@ -751,7 +751,7 @@ bool m_double_trap_16() {
     CSRC(CSR_MNSTATUS , MNSTATUS_NMIE);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     CSRW(CSR_MCONFIGPTR,0xfff);
 
     TEST_ASSERT("实现smrnmi扩展,若在 M-mode 中执行且 mnstatus.NMIE = 0,异常视为unexpected trap",
@@ -773,7 +773,7 @@ bool m_double_trap_17() {
     CSRS(CSR_MNSTATUS , MNSTATUS_NMIE);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     CSRW(CSR_MCONFIGPTR,0xfff);
 
     TEST_ASSERT("实现 Smrnmi 扩展且 mnstatus.NMIE = 1,发生 unexpected trap,硬件跳转到 RNMI 处理程序",
@@ -808,7 +808,7 @@ bool m_double_trap_122() {
 
     TEST_SETUP_EXCEPT();
     goto_priv(PRIV_HS);
-    printf("入口：");
+    printf("入口-");
     trap = 2;
     double_trap_enabled = true;    //用来控制handler中的处理
 
@@ -924,7 +924,7 @@ bool s_double_trap_5() {
     CSRS(CSR_MTVEC , 1ULL << 0);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 2;
     double_trap_enabled = true;    //用来控制handler中的处理
 
@@ -955,7 +955,7 @@ bool s_double_trap_6() {       //nemu和spike不一致，可测
     printf("mtvec=%llx \n",CSRR(CSR_MTVEC));
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 2;
     CSRS(mip, 1ULL << 1);
 
@@ -981,7 +981,7 @@ bool s_double_trap_7() {
     CSRS(CSR_MTVEC , 1ULL << 0);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 1;
     double_trap_enabled = true;    //用来控制handler中的处理
 
@@ -1007,7 +1007,7 @@ bool s_double_trap_8() {
     printf("mtvec=%llx \n",CSRR(CSR_MTVEC));
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 1;
     double_trap_enabled = true;    //用来控制handler中的处理
     goto_priv(PRIV_HS);
@@ -1031,7 +1031,7 @@ bool s_double_trap_9() {
     printf("mtvec=%llx \n",CSRR(CSR_MTVEC));
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 1;
     double_trap_enabled = true;    //用来控制handler中的处理
     goto_priv(PRIV_HU);
@@ -1055,7 +1055,7 @@ bool s_double_trap_10() {
     printf("mtvec=%llx \n",CSRR(CSR_MTVEC));
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 2;
     double_trap_enabled = true;    //用来控制handler中的处理
     goto_priv(PRIV_HS);
@@ -1079,7 +1079,7 @@ bool s_double_trap_11() {
     printf("mtvec=%llx \n",CSRR(CSR_MTVEC));
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 2;
     double_trap_enabled = true;    //用来控制handler中的处理
     goto_priv(PRIV_HU);
@@ -1112,7 +1112,7 @@ bool s_double_trap_12() {
     CSRS(CSR_MTVEC , 1ULL << 0);
 
     TEST_SETUP_EXCEPT();
-    printf("入口：");
+    printf("入口-");
     trap = 2;
     double_trap_enabled = true;    //用来控制handler中的处理
 
@@ -1142,7 +1142,7 @@ bool s_double_trap_13() {
     CSRW(CSR_MTVEC,m_test_entry);
     CSRS(CSR_MTVEC , 1ULL << 0);
 
-    printf("入口：");
+    printf("入口-");
     trap = 1;
     double_trap_enabled = true;    //用来控制handler中的处理
 
@@ -1173,7 +1173,7 @@ bool s_double_trap_14() {
     CSRW(CSR_MTVEC,m_test_entry);
     CSRS(CSR_MTVEC , 1ULL << 0);
 
-    printf("入口：");
+    printf("入口-");
     trap = 1;
     double_trap_enabled = true;    //用来控制handler中的处理
 
@@ -1205,7 +1205,7 @@ bool s_double_trap_15() {
     CSRW(CSR_MTVEC,m_test_entry);
     CSRS(CSR_MTVEC , 1ULL << 0);
 
-    printf("入口：");
+    printf("入口-");
     trap = 5;
     double_trap_enabled = true;    //用来控制handler中的处理
 
@@ -1236,7 +1236,7 @@ bool s_double_trap_16() {
     CSRW(CSR_MTVEC,m_test_entry);
     CSRS(CSR_MTVEC , 1ULL << 0);
 
-    printf("入口：");
+    printf("入口-");
     trap = 2;
     double_trap_enabled = true;    //用来控制handler中的处理
 
@@ -1263,7 +1263,7 @@ bool rnnmi_handler() {
     CSRW(CSR_MTVEC,m_test_entry);
     CSRW(CSR_STVEC,hs_test_entry);
     printf("mnstatus.NMIE is 1、mstatus.mdt=1时,trap到m模式,预期进入rnnmi处理程序(检查mnepc和mncause)\n");
-    printf("入口：");
+    printf("入口-");
     TEST_SETUP_EXCEPT();
     CSRW(CSR_MCONFIGPTR,0xfff);
     printf("mnepc=%llx\n",CSRR(CSR_MNEPC));

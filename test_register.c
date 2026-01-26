@@ -91,7 +91,6 @@
 // TEST_REGISTER(stateen_C_test_4);   
 // TEST_REGISTER(stateen_C_test_5); 
 // TEST_REGISTER(stateen_C_test_6); 
-// TEST_REGISTER(stateen_C_test_7); 
 // TEST_REGISTER(stateen_SE0_test_1); 
 // TEST_REGISTER(stateen_SE0_test_2); 
 // TEST_REGISTER(stateen_SE0_test_3); 
@@ -136,8 +135,7 @@
 
 
     
-// TEST_REGISTER(priv_change_10);    
-// TEST_REGISTER(priv_change_9);
+
 // TEST_REGISTER(priv_change_8);    
 // TEST_REGISTER(priv_change_7);   
 // TEST_REGISTER(priv_change_6);    
@@ -202,7 +200,7 @@
 // TEST_REGISTER(svpbmt_test_15);      //涉及cache，单独跑rtl
 // TEST_REGISTER(svpbmt_test_16);       //涉及cache，单独跑rtl
 // TEST_REGISTER(svpbmt_test_17);        //涉及cache，单独跑rtl
-// TEST_REGISTER(svpbmt_test_18);        //涉及cache，单独跑rtl
+TEST_REGISTER(svpbmt_test_18);        //涉及cache，单独跑rtl
 
 
 
@@ -212,9 +210,9 @@
 // TEST_REGISTER(test_sv48_mode);
 // TEST_REGISTER(test_sv39_to_sv48_switch);
 // TEST_REGISTER(test_sv48_to_sv39_switch);
-// TEST_REGISTER(test_multiple_switches_m_mode);
+// TEST_REGISTER(test_multiple_switches_s_mode);
 // TEST_REGISTER(test_multiple_switches_u_mode);
-// TEST_REGISTER(satp_mode_test);   //涉及tlb，单独跑rtl
+// TEST_REGISTER(satp_mode_test);   //涉及tlb，单独跑rtl(代码待设计fence前后取指变化)
 // TEST_REGISTER(satp_ppn_test);   //涉及tlb，单独跑rtl
 // TEST_REGISTER(satp_ppn_asid_limit_test);     //逻辑太简单，后续需完善
 
@@ -272,7 +270,12 @@
 // TEST_REGISTER(store_access_fault_2);
 // TEST_REGISTER(store_access_fault_1);
 
-// TEST_REGISTER(amo_access_fault_23);
+// TEST_REGISTER(amo_access_fault_28);
+// TEST_REGISTER(amo_access_fault_27);
+// TEST_REGISTER(amo_access_fault_26);
+// TEST_REGISTER(amo_access_fault_25);
+// TEST_REGISTER(amo_access_fault_24);
+// TEST_REGISTER(amo_access_fault_23);  //涉及tlb，单独跑rtl
 // TEST_REGISTER(amo_access_fault_22);  //涉及tlb，单独跑rtl
 // TEST_REGISTER(amo_access_fault_21);  //涉及tlb，单独跑rtl
 // TEST_REGISTER(amo_access_fault_20);
@@ -332,8 +335,7 @@
 // TEST_REGISTER(random_instruction_tests);
 // TEST_REGISTER(ebreak_tests_1);
 // TEST_REGISTER(ebreak_tests_2);
-// TEST_REGISTER(ebreak_tests_3);
-// TEST_REGISTER(ebreak_tests_4);
+
 // TEST_REGISTER(amo_page_fault_1);
 // TEST_REGISTER(amo_page_fault_2);
 // TEST_REGISTER(amo_page_fault_3);
@@ -455,6 +457,8 @@
 // TEST_REGISTER(pmp_test_1);
 // TEST_REGISTER(pmp_test_2);
 // TEST_REGISTER(pmp_test_3);
+// TEST_REGISTER(pmp_test_4);
+// TEST_REGISTER(pmp_test_5);
 
 
 // TEST_REGISTER(fence_test_1);   //涉及tlb，单独跑rtl
@@ -462,12 +466,8 @@
 // TEST_REGISTER(fence_test_3);   //涉及tlb，单独跑rtl
 // TEST_REGISTER(fence_test_4);   //涉及tlb，单独跑rtl
 
-
-// TEST_REGISTER(trigger_tests);
-
 // TEST_REGISTER(caogao);
 // TEST_REGISTER(caogao_2);
-
 
 
 // TEST_REGISTER(load_access_fault_11);     //要分别弄sv39、sv48跑

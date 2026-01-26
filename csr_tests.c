@@ -670,19 +670,21 @@ bool pmp_test_1(){
     CSRW(CSR_PMPCFG0, 0x0);
 
     //配置pmpcfg0的pmp0为R=0,W=1,X=0的配置
-    CSRW(CSR_PMPADDR0, 0x80000000 >> 2);
-    CSRW(CSR_PMPADDR1, 0x81000000 >> 2);  
+    CSRW(CSR_PMPADDR0, 0x800000000 >> 2);
+    CSRW(CSR_PMPADDR1, 0x810000000 >> 2);  
     CSRC(CSR_PMPCFG0, 1ULL << 8); //PMP1cfg.R
     CSRS(CSR_PMPCFG0, 1ULL << 9); //PMP1cfg.W
     CSRS(CSR_PMPCFG0, 1ULL << 10); //PMP1cfg.X
     CSRS(CSR_PMPCFG0, 1ULL << 11); //PMP1cfg.A
 
     printf("pmpcfg0: %llx\n", CSRR(CSR_PMPCFG0));
+    goto_priv(PRIV_HS);
     TEST_SETUP_EXCEPT();
-    sw(0x80030000, 0x12345678);   //hs模式下执行store指令
+    sw(0x800030000, 0x12345678);   //hs模式下执行store指令
 
-    TEST_ASSERT("hs mode store when pmpcfg.R=0 and pmpcfg.W=1 successful",
-        excpt.triggered == false
+    TEST_ASSERT("hs mode store when pmpcfg.R=0 and pmpcfg.W=1 cause to SAF",
+        excpt.triggered == true &&
+        excpt.cause == CAUSE_SAF
     );
 
     TEST_END();
@@ -744,42 +746,65 @@ bool pmp_test_3(){
     CSRW(CSR_PMPADDR15, 0x10000000000);
 
     CSRW(CSR_PMPCFG0, 0x0);
-    CSRW(CSR_PMPADDR1, 0x0);
     CSRW(CSR_PMPADDR0, 0x0);
+    CSRW(CSR_PMPADDR1, 0x0);
+    CSRW(CSR_PMPADDR2, 0x0);
+    CSRW(CSR_PMPADDR3, 0x0);
 
     //L=1，pmpcfgi.A=NAPOT，对第i条PMP进行写入,第i项PMP条目写入被忽略
     goto_priv(PRIV_M);
-    CSRS(CSR_PMPCFG0, 3ULL << 11); //PMP1cfg.A=3(NAPOT)
-    CSRS(CSR_PMPCFG0, 1ULL << 15); //PMP1cfg.L=1
-    
+    CSRS(CSR_PMPCFG0, 3ULL << 3); //PMP0cfg.A=3(NAPOT)
+    CSRS(CSR_PMPCFG0, 1ULL << 7); //PMP0cfg.L=1
+    uint64_t origin_value = CSRR(CSR_PMPADDR0);
+    uint64_t origin_value_1 = CSRR(CSR_PMPCFG0);
+
     TEST_SETUP_EXCEPT();
-    CSRW(CSR_PMPADDR1, 0x81000FF1);
+    CSRW(CSR_PMPADDR0, 0x81000FF1);
+    CSRC(CSR_PMPCFG0, 3ULL << 3);
     //验证读出pmpaddr未被写入
     TEST_ASSERT("L=1,pmpcfg.A=NAPOT write pmpaddr ignored",
-        CSRR(CSR_PMPADDR1) == 0
+        CSRR(CSR_PMPADDR0) == origin_value &&
+        CSRR(CSR_PMPCFG0) == origin_value_1
     );
     
     //L=1，pmpcfgi.A=TOR，对第i条PMP进行写入,第i项pmpcfg，和第i项和i-1项pmpaddr写入被忽略
     goto_priv(PRIV_M);
-    CSRS(CSR_PMPCFG0, 1ULL << 11); //PMP1cfg.A=2(TOR)
+    CSRS(CSR_PMPCFG0, 1ULL << 19); //PMP2cfg.A=2(TOR)
+    CSRS(CSR_PMPCFG0, 1ULL << 23); //PMP2cfg.L=1
+
+    origin_value = CSRR(CSR_PMPADDR1);
+    origin_value_1 = CSRR(CSR_PMPCFG0);
+    uint64_t origin_value_2 = CSRR(CSR_PMPADDR2);
+
     TEST_SETUP_EXCEPT();
-    CSRW(CSR_PMPADDR1, 0x81000FF2);
-    CSRW(CSR_PMPADDR0, 0x80000FF3);
+    CSRW(CSR_PMPADDR1, 0x81000FF1);
+    CSRW(CSR_PMPADDR2, 0x81000FF1);
+    CSRC(CSR_PMPCFG0, 1ULL << 19);
+
     //验证读出pmpaddr未被写入
     TEST_ASSERT("L=1,pmpcfg.A=TOR write pmpaddr ignored",
-        CSRR(CSR_PMPADDR1) == 0 &&
-        CSRR(CSR_PMPADDR0) == 0 &&
-        (CSRR(CSR_PMPCFG0) & 0xFFF) == 0
+        CSRR(CSR_PMPADDR1) == origin_value &&
+        CSRR(CSR_PMPCFG0) == origin_value_1 &&        
+        CSRR(CSR_PMPADDR2) == origin_value_2 
     );
 
     //L=1，pmpcfgi.A=OFF，对第i条PMP进行写入,第i 项PMP条目写入被忽略
     goto_priv(PRIV_M);
-    CSRC(CSR_PMPCFG0, 3ULL << 11); //PMP1cfg.A=0(OFF)
+    CSRC(CSR_PMPCFG0, 3ULL << 27); //PMP3cfg.A=0(OFF)
+    CSRS(CSR_PMPCFG0, 1ULL << 31); //PMP3cfg.L=1
+
+    origin_value = CSRR(CSR_PMPADDR3);
+    origin_value_1 = CSRR(CSR_PMPCFG0);
+
     TEST_SETUP_EXCEPT();
-    CSRW(CSR_PMPADDR1, 0x81000FF4);
+
+    CSRW(CSR_PMPADDR3, 0x81000FF4);
+    CSRS(CSR_PMPCFG0, 3ULL << 27);
     //验证读出pmpaddr未被写入
+
     TEST_ASSERT("L=1,pmpcfg.A=OFF write pmpaddr ignored",
-        CSRR(CSR_PMPADDR1) == 0
+        CSRR(CSR_PMPADDR3) == origin_value &&
+        CSRR(CSR_PMPCFG0) == origin_value_1   
     );
 
 }
@@ -788,7 +813,31 @@ bool pmp_test_4(){
     //当 pmpcfgi.A=3,napot根据手册Table19要求匹配地址
     TEST_START();
     goto_priv(PRIV_M);
-    //模拟linknan的PMA环境
+
+    // //PMA模拟linknan的PMA环境
+    // CSRW(CSR_PMAADDR0, 0xFFFFFFFFFFF);
+    // CSRW(CSR_PMACFG0, 0x6F);
+
+    // CSRW(CSR_PMACFG2, 0xF006F0F00000000);
+    // CSRW(CSR_PMAADDR12, 0x20000000);
+    // CSRW(CSR_PMAADDR13, 0x120000000);
+    // CSRW(CSR_PMAADDR14, 0xC000000000);
+    // CSRW(CSR_PMAADDR15, 0x10000000000);
+
+    // CSRW(CSR_PMACFG0, 0x0);
+    // CSRW(CSR_PMAADDR1, 0x0);
+    // CSRW(CSR_PMAADDR0, 0x0);
+
+    // //pmpcfgi.A=3，napot，根据手册Table19要求匹配地址
+    // CSRS(CSR_PMACFG0, 1ULL << 8); //PMA1cfg.R
+    // CSRS(CSR_PMACFG0, 1ULL << 9); //PMA1cfg.W
+    // CSRS(CSR_PMACFG0, 1ULL << 10); //PMA1cfg.X
+    // CSRS(CSR_PMACFG0, 1ULL << 14); //PMA1cfg.C
+    // CSRS(CSR_PMACFG0, 3ULL << 11); //PMA1cfg.A=3(NAPOT)
+    // CSRW(CSR_PMPADDR1, 0x2F000DFF);
+
+
+    //PMP模拟linknan的PMA环境
     CSRW(CSR_PMPADDR0, 0xFFFFFFFFFFF);
     CSRW(CSR_PMPCFG0, 0x6F);
 
@@ -808,17 +857,21 @@ bool pmp_test_4(){
     CSRS(CSR_PMPCFG0, 1ULL << 10); //PMP1cfg.X
     CSRS(CSR_PMPCFG0, 3ULL << 11); //PMP1cfg.A=3(NAPOT)
     //配置pmpaddr1为0x80000FFF对应的NAPOT地址范围
-    CSRW(CSR_PMPADDR1, 0x80000FFF >> 2);
+    CSRW(CSR_PMPADDR1, 0x2F00FFFF);
+
+    goto_priv(PRIV_HS);
     TEST_SETUP_EXCEPT();
-    sw(0x80000FF0, 0x12345678);   //hs模式下执行store指令，地址在范围内
+
+    sb(0x2F000000ULL << 2, 0x1);   //hs模式下执行store指令，地址在范围内
     TEST_ASSERT("hs mode store when pmpcfg.A=NAPOT and addr in range successful",
         excpt.triggered == false
     );
 
+    goto_priv(PRIV_M);
     CSRC(CSR_PMPCFG0, 1ULL << 9); //PMP1cfg.W
-
+    goto_priv(PRIV_HS);
     TEST_SETUP_EXCEPT();
-    sw(0x80000FF0, 0x12345678);   //hs模式下执行store指令，地址在范围内
+    sb(0x2F000000ULL << 2, 0x1);   //hs模式下执行store指令，地址在范围内
     TEST_ASSERT("hs mode store when pmpcfg.A=NAPOT and addr in range with W=0 leads to PMP exception",
         excpt.triggered == true &&
         excpt.cause == CAUSE_SAF

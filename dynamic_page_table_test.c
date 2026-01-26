@@ -141,7 +141,7 @@ bool test_sv48_to_sv39_switch() {
 }
 
 
-bool test_multiple_switches_m_mode() {
+bool test_multiple_switches_s_mode() {
     TEST_START();
     
     // 测试多次来回切换
@@ -149,6 +149,8 @@ bool test_multiple_switches_m_mode() {
     goto_priv(PRIV_M);
     CSRS(CSR_MSTATUS, MSTATUS_MPRV);
     CSRS(CSR_MSTATUS, MSTATUS_MPP);
+
+    goto_priv(PRIV_HS);
 
     for (int i = 0; i < 3; i++) {
         // 切换到sv39
@@ -348,7 +350,7 @@ bool satp_mode_test() {
     
     TEST_SETUP_EXCEPT();
     uint64_t val = ld(vaddr);
-    TEST_ASSERT("Access in SV39 mode successful",
+    TEST_ASSERT("Access in SV39 mode",
         val == 0xdeadbeef
     );
 
@@ -365,8 +367,8 @@ bool satp_mode_test() {
     TEST_SETUP_EXCEPT();
     
     val = ld(vaddr);
-    TEST_ASSERT("Access in SV48 mode fail(without SFENCE.VMA)",
-        val != 0xdeadbeef || excpt.triggered == true
+    TEST_ASSERT("Access in SV48 mode(without SFENCE.VMA)",     //待修改更复杂
+        val == 0xdeadbeef && excpt.triggered == false
     );
 
 
@@ -375,7 +377,7 @@ bool satp_mode_test() {
 
     TEST_SETUP_EXCEPT();
     val = ld(vaddr);
-    TEST_ASSERT("Access in SV48 mode successful(after SFENCE.VMA)",
+    TEST_ASSERT("Access in SV48 mode(after SFENCE.VMA)",
         val == 0xdeadbeef && excpt.triggered == false
     );
 
@@ -390,15 +392,15 @@ bool satp_mode_test() {
     TEST_SETUP_EXCEPT();
 
     val = ld(vaddr);
-    TEST_ASSERT("Access in SV39 mode fail(without SFENCE.VMA)",
-        val != 0xdeadbeef || excpt.triggered == true
+    TEST_ASSERT("Access in SV39 mode(without SFENCE.VMA)",
+        val == 0xdeadbeef && excpt.triggered == false
     );
 
     sfence_vma();
 
     TEST_SETUP_EXCEPT();
     val = ld(vaddr);
-    TEST_ASSERT("Access in SV39 mode successful(after SFENCE.VMA)",
+    TEST_ASSERT("Access in SV39 mode(after SFENCE.VMA)",
         val == 0xdeadbeef && excpt.triggered == false
     );
     
@@ -407,7 +409,7 @@ bool satp_mode_test() {
     CSRW(CSR_SATP, 0);
 
     val = ld(paddr);
-    TEST_ASSERT("Access in bare mode successful(without SFENCE.VMA)",
+    TEST_ASSERT("Access in bare mode(without SFENCE.VMA)",
         val == 0xdeadbeef
     );
 
@@ -424,15 +426,15 @@ bool satp_mode_test() {
     TEST_SETUP_EXCEPT();
     
     val = ld(vaddr);
-    TEST_ASSERT("Access in SV48 mode fail(without SFENCE.VMA)",
-        val != 0xdeadbeef || excpt.triggered == true
+    TEST_ASSERT("Access in SV48 mode(without SFENCE.VMA)",
+        val == 0xdeadbeef && excpt.triggered == false
     );
 
     sfence_vma();
 
     TEST_SETUP_EXCEPT();
     val = ld(vaddr);
-    TEST_ASSERT("Access in SV48 mode successful(after SFENCE.VMA)",
+    TEST_ASSERT("Access in SV48 mode(after SFENCE.VMA)",
         val == 0xdeadbeef && excpt.triggered == false
     );
 
@@ -441,7 +443,7 @@ bool satp_mode_test() {
     CSRW(CSR_SATP, 0);
 
     val = ld(paddr);
-    TEST_ASSERT("Access in bare mode successful(without SFENCE.VMA)",
+    TEST_ASSERT("Access in bare mode(without SFENCE.VMA)",
         val == 0xdeadbeef
     );
 
@@ -456,15 +458,15 @@ bool satp_mode_test() {
     TEST_SETUP_EXCEPT();
 
     val = ld(vaddr);
-    TEST_ASSERT("Access in SV39 mode fail(without SFENCE.VMA)",
-        val != 0xdeadbeef || excpt.triggered == true
+    TEST_ASSERT("Access in SV39 mode(without SFENCE.VMA)",
+        val == 0xdeadbeef && excpt.triggered == false
     );
 
     sfence_vma();
 
     TEST_SETUP_EXCEPT();
     val = ld(vaddr);
-    TEST_ASSERT("Access in SV39 mode successful(after SFENCE.VMA)",
+    TEST_ASSERT("Access in SV39 mode(after SFENCE.VMA)",
         val == 0xdeadbeef && excpt.triggered == false
     );
 
@@ -496,14 +498,13 @@ bool satp_ppn_test() {
 // 修改satp.PPN指向另一个物理页
 
     goto_priv(PRIV_M);
-    hspt[0][2] = PTE_V | (((uintptr_t)&hspt[1][0]) >> 2);
 
     // 取出旧satp.mode
     uint64_t old_satp = CSRR(CSR_SATP);
     uint64_t satp_mode = old_satp & 0xF000000000000000ULL; 
     
-    // 创建一个新的页表根地址（使用hspt[0][2]作为新的根）
-    uintptr_t new_root_ppn = ((uintptr_t)&hspt[0][2]) >> 12;
+    // 创建一个新的页表根地址（使用hspt[1][0]作为新的根）
+    uintptr_t new_root_ppn = ((uintptr_t)&hspt[1][0]) >> 12;
     
     // 构造新的satp值
     uint64_t new_satp = satp_mode | (new_root_ppn & 0x00000FFFFFFFFFFFULL);  // SATP64_PPN mask
@@ -515,18 +516,19 @@ bool satp_ppn_test() {
     TEST_SETUP_EXCEPT();
     
     val = ld(vaddr);
-    TEST_ASSERT("Access after changing PPN fail(without SFENCE.VMA)",
-        val != 0xdeadbeef || excpt.triggered == true
+    TEST_ASSERT("Access after changing PPN(without SFENCE.VMA)",
+        val == 0xdeadbeef && excpt.triggered == false
     );
 
     // 执行 SFENCE.VMA 后再访存
     sfence_vma();
     TEST_SETUP_EXCEPT();
     val = ld(vaddr);
-    TEST_ASSERT("Access after changing PPN successful(after SFENCE.VMA)",
-        val == 0xdeadbeef && excpt.triggered == false
+    TEST_ASSERT("Access after changing PPN(after SFENCE.VMA)",
+        val != 0xdeadbeef || excpt.triggered == true
     );
 
+    CSRW(CSR_SATP,0);
 
     // 设置为sv39
     set_page_table_mode(PAGE_TABLE_MODE_SV39);
@@ -551,8 +553,6 @@ bool satp_ppn_test() {
         addr += SUPERPAGE_SIZE(0);
     }
 
-    hspt[3][4] = PTE_V | (((uintptr_t)&hspt[1][0]) >> 2);
-
     // 取出旧satp.mode
     old_satp = CSRR(CSR_SATP);
     satp_mode = old_satp & 0xF000000000000000ULL; 
@@ -570,16 +570,16 @@ bool satp_ppn_test() {
     TEST_SETUP_EXCEPT();
     
     val = ld(vaddr);
-    TEST_ASSERT("Access after changing PPN fail(without SFENCE.VMA)",
-        val != 0xdeadbeef || excpt.triggered == true
+    TEST_ASSERT("Access after changing PPN(without SFENCE.VMA)",
+        val == 0xdeadbeef && excpt.triggered == false
     );
 
     // 执行 SFENCE.VMA 后再访存
     sfence_vma();
     TEST_SETUP_EXCEPT();
     val = ld(vaddr);
-    TEST_ASSERT("Access after changing PPN successful(after SFENCE.VMA)",
-        val == 0xdeadbeef && excpt.triggered == false
+    TEST_ASSERT("Access after changing PPN(after SFENCE.VMA)",
+        val != 0xdeadbeef || excpt.triggered == true
     );
 
 

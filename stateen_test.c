@@ -6,7 +6,7 @@ bool stateen_C_test_1(){
     TEST_START();
     
     goto_priv(PRIV_M);
-    //当mstateen.C=0,hu/hs mode 不可访问自定义寄存器
+    //当mstateen.C=0，u、s mode访问自定义寄存器
     CSRC(CSR_MSTATEEN0 , MSTATEEN_C);
 
     goto_priv(PRIV_HU);
@@ -44,7 +44,7 @@ bool stateen_C_test_2(){
     CSRS(CSR_MSTATEEN0 , MSTATEEN_C);
     CSRC(CSR_SSTATEEN0 , MSTATEEN_C);
 
-    //当mstateen.C=1,sstateem.C=0,,HU不可访问自定义寄存器
+    //当mstateen.C=1，sstateem.C=0，U访问自定义寄存器
     goto_priv(PRIV_HU);
     TEST_SETUP_EXCEPT();
     CSRR(0X801);    //目前未实现u模式相关自定义寄存器
@@ -60,7 +60,7 @@ bool stateen_C_test_2(){
 
 bool stateen_C_test_3(){
 
-    //当mstateen.C=0,m mode 可访问自定义寄存器
+    //当mstateen.C=0，m mode访问自定义寄存器
 
     TEST_START();
     
@@ -80,7 +80,7 @@ bool stateen_C_test_3(){
 
 bool stateen_C_test_4(){
 
-    //当mstateen.C=1,sstateen.C=0,hu不可访问自定义寄存器
+    //当mstateen.C=1，sstateen.C=0，u访问自定义寄存器
 
     TEST_START();
     
@@ -110,7 +110,7 @@ bool stateen_C_test_5(){
     TEST_START();
     
     goto_priv(PRIV_M);
-    //当mstateen.C=1 sstateen.c=1 时u模式可以访问自定义寄存器
+    //当mstateen.C=1，sstateen.C=1，u mode访问自定义寄存器，不产生异常【不过目前未实现u模式相关自定义寄存器】
     CSRS(CSR_MSTATEEN0 , MSTATEEN_C);
     CSRS(CSR_SSTATEEN0 , MSTATEEN_C);
 
@@ -125,28 +125,9 @@ bool stateen_C_test_5(){
 
 
 }
+
 
 bool stateen_C_test_6(){
-
-    TEST_START();
-    
-    goto_priv(PRIV_M);
-    //当mstateen.C=1 sstateen.c=1 时HU模式可以访问自定义寄存器
-    CSRS(CSR_MSTATEEN0 , MSTATEEN_C);
-    CSRS(CSR_SSTATEEN0 , MSTATEEN_C);
-
-
-    goto_priv(PRIV_HU);
-    TEST_SETUP_EXCEPT();
-    CSRR(0X8FE);    //目前未实现u模式相关自定义寄存器
-    excpt_info();
-
-    TEST_ASSERT("hu mode accesss Custom register successful when mstateen.c=1 sstateen.c=1",
-        excpt.triggered == false
-    ); 
-}
-
-bool stateen_C_test_7(){
 
     TEST_START();
     
@@ -172,7 +153,7 @@ bool stateen_ENVCFG_test_1(){
     TEST_START();
     
     goto_priv(PRIV_M);
-    //当mstateen.ENVCFG=0,hu/hs/vs/vu mode 不可访问Henvcfg和Senvcfg寄存器
+    //当mstateen.ENVCFG=0，s、u mode 访问Senvcfg寄存器
     CSRC(CSR_MSTATEEN0 , MSTATEEN_ENVCFG);
 
     goto_priv(PRIV_HU);
@@ -201,7 +182,7 @@ bool stateen_ENVCFG_test_1(){
 
 bool stateen_ENVCFG_test_2(){
 
-    //当mstateen.ENVCFG=0,m mode 可访问Henvcfg和Senvcfg寄存器
+    //当mstateen.ENVCFG=0，m mode 访问Senvcfg寄存器
 
     TEST_START();
     
@@ -226,7 +207,7 @@ bool stateen_ENVCFG_test_2(){
 
 bool stateen_ENVCFG_test_3(){
 
-    //当mstateen.ENVCFG=1,hs mode 可访问Henvcfg和Senvcfg寄存器
+    //当mstateen.ENVCFG=1,s mode 访问Senvcfg寄存器
 
     TEST_START();
     
@@ -242,7 +223,7 @@ bool stateen_ENVCFG_test_3(){
         excpt.triggered == false
     ); 
 
-    //当mstateen.ENVCFG=1,m mode 可访问Henvcfg和Senvcfg寄存器
+    //当mstateen.ENVCFG=1，m mode 可访问Senvcfg寄存器
     
     goto_priv(PRIV_M);
     CSRS(CSR_MSTATEEN0 , MSTATEEN_ENVCFG);
@@ -256,7 +237,7 @@ bool stateen_ENVCFG_test_3(){
         excpt.triggered == false
     ); 
 
-    //当mstateen.ENVCFG=1,hu mode 仍不可访问Henvcfg和Senvcfg寄存器
+    //当mstateen.ENVCFG=1 sstateen.ENVCFG=0，u mode访问Senvcfg寄存器
 
     goto_priv(PRIV_M);
     CSRS(CSR_MSTATEEN0 , MSTATEEN_ENVCFG);
@@ -287,7 +268,7 @@ bool stateen_SE0_test_1(){
     goto_priv(PRIV_M);
     CSRC(CSR_MSTATEEN0 , MSTATEEN_SE0);
 
-    //当mstateen.SE0=0,hs不可访问Hstateen0和Sstateen0寄存器
+    //当mstateen.SE0=0，s mode访问Sstateen0寄存器
     goto_priv(PRIV_HS);
 
     TEST_SETUP_EXCEPT();
@@ -299,7 +280,7 @@ bool stateen_SE0_test_1(){
         excpt.cause == CAUSE_ILI
     ); 
 
-    //当mstateen.SE0=0,hu不可访问Hstateen0和Sstateen0寄存器
+    //当mstateen.SE0=0，u mode访问Sstateen0寄存器
     goto_priv(PRIV_HU);
 
     TEST_SETUP_EXCEPT();
@@ -318,7 +299,7 @@ bool stateen_SE0_test_1(){
 
 bool stateen_SE0_test_2(){
 
-    //当mstateen.SE0=0,m mode 可访问Hstateen0和Sstateen0寄存器
+    //当mstateen.SE0=0，m mode访问Sstateen0寄存器
 
     TEST_START();
     
@@ -343,7 +324,7 @@ bool stateen_SE0_test_2(){
 
 bool stateen_SE0_test_3(){
 
-    //当mstateen.SE0=1,hs mode 可访问Hstateen0和Sstateen0寄存器
+    //当mstateen.SE0=1，s mode访问Sstateen0寄存器
 
     TEST_START();
     
@@ -360,7 +341,7 @@ bool stateen_SE0_test_3(){
         excpt.triggered == false
     ); 
 
-    //当mstateen.SE0=1,m mode 可访问Hstateen0和Sstateen0寄存器
+    //当mstateen.SE0=1，m mode访问Sstateen0寄存器
     
     goto_priv(PRIV_M);
     CSRS(CSR_MSTATEEN0 , MSTATEEN_SE0);
@@ -376,7 +357,7 @@ bool stateen_SE0_test_3(){
     ); 
 
 
-    //当mstateen.SE0=1,hu mode 仍不可访问Hstateen0和Sstateen0寄存器
+    //当mstateen.SE0=1 sstateen.SE0=0，u mode访问Sstateen0寄存器，引发ILI
     
     goto_priv(PRIV_M);
     CSRS(CSR_MSTATEEN0 , MSTATEEN_SE0);
@@ -404,7 +385,7 @@ bool stateen_SE0_test_4(){
     TEST_START();
     
     goto_priv(PRIV_M);
-    //当mstateen.SE0=1,v=0时,可访问Hstateen0和Sstateen0寄存器
+    //当mstateen.SE0=1，访问Sstateen0寄存器
     CSRS(CSR_MSTATEEN0 , MSTATEEN_SE0);
     CSRS(CSR_SSTATEEN0 , MSTATEEN_SE0);
 

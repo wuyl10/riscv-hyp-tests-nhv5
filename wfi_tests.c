@@ -56,15 +56,12 @@ bool wfi_exception_tests_3() {
 
     //mstatus.TW=0时，在HS模式下，中断未被禁用，且代理没打开，执行wfi指令
     CSRC(CSR_MSTATUS,MSTATUS_TW);
-    // CSRW(medeleg,0);
-    // CSRW(mideleg,0);   
-    // CSRS(CSR_HIE, 0b0100);
-    // CSRS(CSR_HIP, 0b0100);
+    CSRW(medeleg,0);
 
     goto_priv(PRIV_HS);
     TEST_SETUP_EXCEPT();
     wfi();
-    TEST_ASSERT("S-mode wfi does not trigger exception when Interrupt is not disabled and mstatus.TW=0 and mideleg=0",
+    TEST_ASSERT("S-mode wfi does not trigger exception when Interrupt is not disabled and mstatus.TW=0",
         excpt.triggered == false
     );   
 
@@ -118,7 +115,7 @@ bool wfi_exception_tests_5() {
     TEST_SETUP_EXCEPT();
     wfi();
 
-    TEST_ASSERT("VS-mode wfi is not awakened when mstatus.TW=0 and mideleg=0 and xie=0",
+    TEST_ASSERT("S-mode wfi is not awakened when mstatus.TW=0 and mideleg=0 and xie=0",
         excpt.triggered == false
     );   
 
