@@ -473,3 +473,28 @@
 // TEST_REGISTER(load_access_fault_11);     //要分别弄sv39、sv48跑
 // TEST_REGISTER(store_access_fault_11);      //要分别弄sv39、sv48跑    
 // TEST_REGISTER(amo_access_fault_11);      //要分别弄sv39、sv48跑
+
+
+//vec测试用例 草稿
+// TEST_REGISTER(vec_vle_vse_func); 
+// TEST_REGISTER(vec_test_1); 
+// TEST_REGISTER(vec_test_2); 
+// TEST_REGISTER(vec_test_3); 
+// TEST_REGISTER(vec_test_4); 
+// TEST_REGISTER(vec_test_5); 
+// TEST_REGISTER(vec_test_6); 
+// TEST_REGISTER(vec_test_7); 
+// TEST_REGISTER(vec_test_8); 
+// TEST_REGISTER(vec_test_9);       
+// TEST_REGISTER(vec_test_10); 
+// TEST_REGISTER(vec_test_11); 
+// TEST_REGISTER(vec_test_12); 
+// TEST_REGISTER(vec_test_13); 
+// TEST_REGISTER(vec_test_14); 
+// TEST_REGISTER(vec_test_15); 
+// TEST_REGISTER(vec_test_16); 
+// TEST_REGISTER(vec_test_17); 
+// TEST_REGISTER(vec_test_18); 
+// TEST_REGISTER(vec_test_19); 
+// TEST_REGISTER(vec_test_20); 
+// TEST_REGISTER(vec_test_21);

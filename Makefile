@@ -41,7 +41,7 @@ c_srcs := main.c rvh_test.c instruction.c page_tables.c\
 	 page_fault.c  access_fault.c\
 	 csr_tests.c Zicntr_test.c mix_instruction.c\
 	 ebreak_tests.c stateen_test.c xtvec_test.c\
-	sxpm_test.c\
+	sxpm_test.c vec_tests.c\
 	$(addprefix $(plat_dir)/, $(notdir $(wildcard $(plat_dir)/*.c)))
 asm_srcs := boot.S handlers.S xtvec_test_asm.S  $(wildcard $(plat_dir)/*.S)
 ld_file:=linker.ld
