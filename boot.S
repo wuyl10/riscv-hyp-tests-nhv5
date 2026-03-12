@@ -4,6 +4,11 @@
 _boot:
     bnez a0, .
     csrwi    sscratch, 0xf
+
+    /* Enable mstatus.FS(bit[14:13]) and mstatus.VS(bit[24:23]) = Initial(01) */
+    li t0, (1 << 13) | (1 << 9)
+    csrs mstatus, t0
+
     /* Initialize stack pointer */
     la sp, __stack_top
 

@@ -56,7 +56,7 @@ ld_file_final:=$(build_dir)/$(ld_file)
 deps:=$(patsubst  %.o, %.d, $(objs)) $(ld_file_final).d
 dirs:=$(sort $(dir $(objs) $(deps)))
 
-GENERIC_FLAGS += -march=rv64imacfd_zicsr_zicbom_zicboz -mabi=lp64 -g3 -mcmodel=medany -O3 $(inc_dirs)
+GENERIC_FLAGS += -march=rv64imacfdv_zicsr_zicbom_zicboz -mabi=lp64 -g3 -mcmodel=medany -O3 $(inc_dirs)
 # GENERIC_FLAGS += -march=rv64imafdcv_zicsr_zifencei_zihintpause -mabi=lp64 -g3 -mcmodel=medany -O3 $(inc_dirs)
 
 

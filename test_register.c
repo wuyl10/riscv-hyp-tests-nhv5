@@ -200,7 +200,7 @@
 // TEST_REGISTER(svpbmt_test_15);      //涉及cache，单独跑rtl
 // TEST_REGISTER(svpbmt_test_16);       //涉及cache，单独跑rtl
 // TEST_REGISTER(svpbmt_test_17);        //涉及cache，单独跑rtl
-TEST_REGISTER(svpbmt_test_18);        //涉及cache，单独跑rtl
+// TEST_REGISTER(svpbmt_test_18);        //涉及cache，单独跑rtl
 
 
 
@@ -417,7 +417,7 @@ TEST_REGISTER(svpbmt_test_18);        //涉及cache，单独跑rtl
 // TEST_REGISTER(instruction_page_fault_24);
 // TEST_REGISTER(instruction_page_fault_25);
 
-// TEST_REGISTER(addr_unaligned_1);
+// TEST_REGISTER(addr_unaligned_1);  // 触发 LoadUnit s0_no_req_tlb 断言 (MAB writeback vs fast_rep_in 冲突)
 // TEST_REGISTER(addr_unaligned_2);
 // TEST_REGISTER(addr_unaligned_3);
 // TEST_REGISTER(addr_unaligned_4);
